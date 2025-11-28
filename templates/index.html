@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio - Windows 95</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- BSOD Screen (Hidden by default) -->
+    <div class="bsod-screen" id="bsod-screen">
+        <div class="bsod-content">
+            <h1>Windows</h1>
+            <p class="bsod-error">A fatal exception 0E has occurred at 0028:C0034B03 in VXD VMM(01) + 00010E36. The current application will be terminated.</p>
+            <p>*  Press any key to terminate the current application.</p>
+            <p>*  Press CTRL+ALT+DEL again to restart your computer. You will lose any unsaved information in all applications.</p>
+            <br>
+            <p class="bsod-press">Press any key to continue _</p>
+        </div>
+    </div>
+
+    <!-- Desktop -->
+    <div class="desktop" id="desktop">
+        <!-- Desktop Icons -->
+        <div class="desktop-icon" data-window="about" style="top: 10px; left: 10px;">
+            <div class="icon-placeholder icon-computer">💻</div>
+            <span>Bio.txt</span>
+        </div>
+        <div class="desktop-icon" data-window="projects" style="top: 10px; left: 110px;">
+            <div class="icon-placeholder icon-folder">📁</div>
+            <span>Projects</span>
+        </div>
+        <div class="desktop-icon" data-window="skills" style="top: 120px; left: 10px;">
+            <div class="icon-placeholder icon-document">📄</div>
+            <span>Skills.doc</span>
+        </div>
+        <div class="desktop-icon" data-window="honors" style="top: 120px; left: 110px;">
+            <div class="icon-placeholder" style="background: linear-gradient(135deg, #713f12 0%, #f59e0b 100%);">🏆</div>
+            <span>Honors.txt</span>
+        </div>
+        <div class="desktop-icon" data-window="contact" style="top: 230px; left: 10px;">
+            <div class="icon-placeholder icon-email">✉️</div>
+            <span>Email</span>
+        </div>
+        <div class="desktop-icon" data-window="cv" style="top: 230px; left: 110px;">
+            <div class="icon-placeholder" style="background: linear-gradient(135deg, #1e40af 0%, #60a5fa 100%);">📋</div>
+            <span>CV.pdf</span>
+        </div>
+        <!-- Terminal Icon -->
+        <div class="desktop-icon" data-window="terminal" style="top: 340px; left: 10px;">
+            <div class="icon-placeholder" style="background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);">⌨️</div>
+            <span>Terminal</span>
+        </div>
+        <!-- Camera Icon -->
+        <div class="desktop-icon" data-window="camera" style="top: 340px; left: 110px;">
+            <div class="icon-placeholder" style="background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%);">📷</div>
+            <span>Camera</span>
+        </div>
+        <!-- Gallery Icon -->
+        <div class="desktop-icon" data-window="gallery" style="top: 450px; left: 10px;">
+            <div class="icon-placeholder" style="background: linear-gradient(135deg, #581c87 0%, #a855f7 100%);">🖼️</div>
+            <span>Gallery</span>
+        </div>
+        <!-- Wallpaper Settings Icon -->
+        <div class="desktop-icon" data-window="wallpaper" style="top: 450px; left: 110px;">
+            <div class="icon-placeholder" style="background: linear-gradient(135deg, #155e75 0%, #06b6d4 100%);">🎨</div>
+            <span>Wallpaper</span>
+        </div>
+    </div>
+
+    <!-- Windows -->
+    <!-- Bio Window -->
+    <div class="window" id="about-window" style="top: 50px; left: 50px; width: 500px; height: 400px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>💻</span>
+                <span>Bio.txt - Notepad</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="content-section">
+                <h2>About Sudarshan Tiwari</h2>
+                <p>Hi! I'm a Computer Science student at Missouri State University specializing in full-stack development, Linux kernel programming, and cloud architecture. I have hands-on experience building scalable web applications and working on low-level system programming.</p>
+                <p>I'm actively seeking software engineering internships where I can apply my skills in full-stack development, system programming, and cloud technologies.</p>
+            </div>
+            <div class="content-section">
+                <h2>Education</h2>
+                <p><strong>Missouri State University</strong> - Springfield, Missouri</p>
+                <p>Bachelor of Science in Computer Science</p>
+                <p>Jan 2023 - Dec 2026 (Expected)</p>
+            </div>
+            <div class="content-section">
+                <h2>Professional Experience</h2>
+                <p><strong>Software Developer Intern</strong> - TuningSQL (Aug 2025 - Present)</p>
+                <ul>
+                    <li>Architected full-stack web platform using PostgreSQL, PHP, JavaScript, and Backbone.js</li>
+                    <li>Developed PHP backend endpoints for HTML DOM transformation using DOMDocument and XPath</li>
+                    <li>Built Backbone.js frontend with real-time validation and AJAX operations</li>
+                </ul>
+                <p><strong>Research Assistant</strong> - Missouri State University (May 2024 - Present)</p>
+                <ul>
+                    <li>Implemented kernel-level memory management subsystem using C/C++</li>
+                    <li>Engineered multi-threaded daemon for memory reclamation with performance monitoring</li>
+                    <li>Designed benchmarking experiments for hybrid memory workload optimization</li>
+                </ul>
+            </div>
+            <div class="content-section">
+                <h2>Specializations</h2>
+                <ul>
+                    <li>Full-Stack Development (React, Node.js, Angular, Django)</li>
+                    <li>Linux Kernel & System Programming (C/C++)</li>
+                    <li>Cloud Architecture (Azure, Docker, Heroku)</li>
+                    <li>Real-Time Systems (SignalR, WebSocket)</li>
+                    <li>Database Design (MongoDB, PostgreSQL, SQL Server)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Window -->
+    <div class="window" id="projects-window" style="top: 70px; left: 100px; width: 600px; height: 500px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>📁</span>
+                <span>My Projects</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="project-card">
+                <h3>💬 Social Media Web App</h3>
+                <p><strong>Tech Stack:</strong> C#, Angular, SignalR, SQL Server, OAuth 2.0, JWT</p>
+                <p>Developed a full-stack social platform with user authentication, real-time chat using SignalR, posts/comments system, and RESTful API backend. Implemented OAuth 2.0 and JWT for secure authentication.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
+            <div class="project-card">
+                <h3>📊 Placement Tracker Dashboard</h3>
+                <p><strong>Tech Stack:</strong> React.js, Node.js, Express.js, MySQL, Tailwind CSS</p>
+                <p>Built a comprehensive job application tracker with REST API, CRUD operations, search/filter functionality, and responsive dashboard for managing job applications.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
+            <div class="project-card">
+                <h3>🖥️ Custom Command Shell</h3>
+                <p><strong>Tech Stack:</strong> C, Unix System Calls, Process Management</p>
+                <p>Engineered a Unix-like shell supporting built-in commands (cd, pwd, exit), external command execution via fork/exec, I/O redirection, and background process management.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
+            <div class="project-card">
+                <h3>🗄️ TuningSQL Content Platform</h3>
+                <p><strong>Tech Stack:</strong> PostgreSQL, PHP, Backbone.js, DOMDocument, XPath</p>
+                <p>Architected full-stack web content transformation platform with PHP backend for HTML DOM manipulation and Backbone.js frontend with real-time validation.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
+            <div class="project-card">
+                <h3>💻 Windows 95 Portfolio</h3>
+                <p><strong>Tech Stack:</strong> HTML5, CSS3, JavaScript, Python Flask</p>
+                <p>Interactive retro portfolio with draggable windows, working terminal, and authentic Windows 95 UI. Features embedded PDF viewer and responsive design.</p>
+                <button class="button-95">You're Here!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Window -->
+    <div class="window" id="skills-window" style="top: 90px; left: 150px; width: 500px; height: 450px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>📄</span>
+                <span>Skills.doc - Microsoft Word</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="content-section">
+                <h2>Programming Languages</h2>
+                <div class="skills-grid">
+                    <div class="skill-item">Python</div>
+                    <div class="skill-item">C</div>
+                    <div class="skill-item">C++</div>
+                    <div class="skill-item">JavaScript</div>
+                    <div class="skill-item">PHP</div>
+                    <div class="skill-item">SQL</div>
+                    <div class="skill-item">Bash</div>
+                    <div class="skill-item">Java</div>
+                    <div class="skill-item">C#</div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Web Technologies</h2>
+                <div class="skills-grid">
+                    <div class="skill-item">React.js</div>
+                    <div class="skill-item">Angular</div>
+                    <div class="skill-item">Node.js</div>
+                    <div class="skill-item">Express.js</div>
+                    <div class="skill-item">Django</div>
+                    <div class="skill-item">Backbone.js</div>
+                    <div class="skill-item">Tailwind CSS</div>
+                    <div class="skill-item">HTML5/CSS3</div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Databases & Cloud</h2>
+                <div class="skills-grid">
+                    <div class="skill-item">MongoDB</div>
+                    <div class="skill-item">SQL Server</div>
+                    <div class="skill-item">PostgreSQL</div>
+                    <div class="skill-item">MySQL</div>
+                    <div class="skill-item">Azure</div>
+                    <div class="skill-item">Heroku</div>
+                    <div class="skill-item">Docker</div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2>Specialized Skills</h2>
+                <div class="skills-grid">
+                    <div class="skill-item">OAuth 2.0</div>
+                    <div class="skill-item">JWT</div>
+                    <div class="skill-item">SignalR</div>
+                    <div class="skill-item">Linux Kernel</div>
+                    <div class="skill-item">RESTful APIs</div>
+                    <div class="skill-item">WebSocket</div>
+                    <div class="skill-item">Git/GitHub</div>
+                    <div class="skill-item">VS Code</div>
+                    <div class="skill-item">Postman</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Honors Window -->
+    <div class="window" id="honors-window" style="top: 130px; left: 250px; width: 500px; height: 400px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>🏆</span>
+                <span>Honors.txt - Notepad</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="content-section">
+                <h2>Key Projects & Achievements</h2>
+                <ul>
+                    <li><strong>Full-Stack Social Platform:</strong> Built real-time chat application with 1000+ lines of C# backend and Angular frontend</li>
+                    <li><strong>Linux Kernel Development:</strong> Implemented memory management subsystem with multi-threaded daemon for optimization</li>
+                    <li><strong>Enterprise Web Platform:</strong> Architected TuningSQL content transformation system serving production users</li>
+                    <li><strong>System Programming:</strong> Developed custom Unix shell with process management and I/O redirection</li>
+                </ul>
+            </div>
+            <div class="content-section">
+                <h2>Technical Research</h2>
+                <ul>
+                    <li><strong>Missouri State University Research Assistant:</strong> Kernel-level memory management research (May 2024 - Present)</li>
+                    <li><strong>Hybrid Memory Systems:</strong> Performance benchmarking and workload optimization for DRAM-NVM architectures</li>
+                    <li><strong>Multi-threaded Systems:</strong> Daemon engineering with real-time performance monitoring</li>
+                </ul>
+            </div>
+            <div class="content-section">
+                <h2>Professional Development</h2>
+                <ul>
+                    <li>Software Developer Intern at TuningSQL (Current)</li>
+                    <li>Full-Stack Web Development specialization</li>
+                    <li>Cloud Architecture & DevOps practices</li>
+                    <li>Real-Time Systems (SignalR, WebSocket)</li>
+                    <li>Security Best Practices (OAuth 2.0, JWT)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- CV Window - PDF Viewer -->
+    <div class="window" id="cv-window" style="top: 50px; left: calc(50% - 400px); width: 800px; height: 600px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>📋</span>
+                <span>CV.pdf - Adobe Acrobat Reader</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body cv-body">
+            <div class="pdf-toolbar">
+                <button class="button-95" onclick="window.open('https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf', '_blank')">📄 Download PDF</button>
+                <button class="button-95" onclick="document.getElementById('cv-iframe').contentWindow.print()">🖨️ Print</button>
+                <button class="button-95" id="cv-refresh-btn">🔄 Refresh</button>
+            </div>
+            <div class="pdf-container">
+                <iframe 
+                    id="cv-iframe"
+                    src="https://docs.google.com/viewer?url=https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf&embedded=true" 
+                    frameborder="0" 
+                    width="100%" 
+                    height="100%"
+                    loading="lazy">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Window -->
+    <div class="window" id="contact-window" style="top: 110px; left: 200px; width: 450px; height: 500px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>✉️</span>
+                <span>Compose Email - Outlook Express</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="content-section">
+                <h2>Get In Touch</h2>
+                <p>I'm actively seeking internship opportunities! Feel free to reach out:</p>
+            </div>
+
+            <div class="content-section">
+                <label>📧 Email:</label>
+                <input type="text" value="st582s@missouristate.edu" readonly onclick="window.location.href='mailto:st582s@missouristate.edu'" style="cursor: pointer;">
+
+                <label>📱 Phone:</label>
+                <input type="text" value="703-762-6809" readonly onclick="window.location.href='tel:703-762-6809'" style="cursor: pointer;">
+
+                <label>🔗 GitHub:</label>
+                <input type="text" value="github.com/ttsudarshan" readonly onclick="window.open('https://github.com/ttsudarshan', '_blank')" style="cursor: pointer;">
+
+                <label>💼 LinkedIn:</label>
+                <input type="text" value="linkedin.com/in/ttsudarshan" readonly onclick="window.open('https://linkedin.com/in/ttsudarshan', '_blank')" style="cursor: pointer;">
+
+                <label>📄 Resume:</label>
+                <input type="text" value="Download Resume PDF" readonly onclick="window.open('https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf', '_blank')" style="cursor: pointer; background: #e0e0ff;">
+
+                <label>📍 Location:</label>
+                <input type="text" value="Springfield, Missouri" readonly>
+            </div>
+
+            <div class="content-section">
+                <label>💬 Send Anonymous Message:</label>
+                <textarea id="anonymous-message" rows="4" placeholder="Type your message here... (It will be sent anonymously)"></textarea>
+                <button class="button-95" id="send-message-btn">📤 Send Message</button>
+                <button class="button-95" id="clear-message-btn">🗑️ Clear</button>
+                <div id="message-status" style="margin-top: 10px; font-size: 11px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal Window -->
+    <div class="window active" id="terminal-window" style="top: 80px; left: 150px; width: 700px; height: 500px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>⌨️</span>
+                <span>Command Prompt - MyShell</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body terminal-body">
+            <div class="terminal-output" id="terminal-output">
+                <div class="terminal-welcome">
+╔═══════════════════════════════════════════════════════════════════╗
+║         Welcome to MyShell - Sudarshan's Portfolio Terminal        ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+Type 'help' for available commands.
+Type 'ls' to see files, 'cat &lt;file&gt;' to read them.
+Type 'open &lt;file&gt;' to open files in GUI windows.
+
+                </div>
+            </div>
+            <div class="terminal-input-line">
+                <span class="terminal-prompt" id="terminal-prompt">/home/sudarshan/Portfolio$ </span>
+                <input type="text" class="terminal-input" id="terminal-input" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Window -->
+    <div class="window" id="camera-window" style="top: 60px; left: 220px; width: 640px; height: 580px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>📷</span>
+                <span>Camera - Windows 95 Webcam</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body camera-body">
+            <!-- Camera Viewfinder -->
+            <div class="camera-viewfinder">
+                <video id="camera-video" autoplay playsinline></video>
+                <canvas id="camera-canvas" style="display: none;"></canvas>
+                <div class="camera-overlay" id="camera-overlay">
+                    <span>📷 Click "Start Camera" to begin</span>
+                </div>
+                <!-- Recording indicator -->
+                <div class="recording-indicator" id="recording-indicator">
+                    <span class="rec-dot"></span> REC
+                </div>
+                <!-- Timer display -->
+                <div class="camera-timer" id="camera-timer">00:00</div>
+                <!-- Camera frame overlay -->
+                <div class="camera-frame"></div>
+            </div>
+            
+            <!-- Camera Controls -->
+            <div class="camera-controls">
+                <button class="button-95 camera-btn" id="start-camera-btn">
+                    <span>▶</span> Start Camera
+                </button>
+                <button class="button-95 camera-btn" id="stop-camera-btn" disabled>
+                    <span>⏹</span> Stop
+                </button>
+                <button class="button-95 camera-btn" id="switch-camera-btn" disabled>
+                    <span>🔄</span> Switch
+                </button>
+                <button class="button-95 camera-btn" id="mirror-camera-btn">
+                    <span>↔️</span> Mirror
+                </button>
+            </div>
+            
+            <div class="camera-controls">
+                <button class="button-95 camera-btn capture-btn" id="capture-photo-btn" disabled>
+                    <span>📸</span> Capture Photo
+                </button>
+                <button class="button-95 camera-btn record-btn" id="record-video-btn" disabled>
+                    <span>🔴</span> Record Video
+                </button>
+                <button class="button-95 camera-btn" id="stop-record-btn" disabled style="display: none;">
+                    <span>⏹</span> Stop Recording
+                </button>
+            </div>
+            
+            <!-- Last Capture Preview -->
+            <div class="last-capture-section">
+                <label>Last Capture:</label>
+                <div class="last-capture-preview" id="last-capture-preview">
+                    <span>No captures yet</span>
+                </div>
+                <div class="capture-actions">
+                    <button class="button-95" id="save-capture-btn" disabled>💾 Save to Gallery</button>
+                    <button class="button-95" id="wallpaper-capture-btn" disabled>🎨 Set Wallpaper</button>
+                    <button class="button-95" id="download-capture-btn" disabled>⬇️ Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Window -->
+    <div class="window" id="gallery-window" style="top: 80px; left: 280px; width: 600px; height: 500px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>🖼️</span>
+                <span>Gallery - My Pictures</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body gallery-body">
+            <!-- Gallery Toolbar -->
+            <div class="gallery-toolbar">
+                <button class="button-95" id="gallery-import-btn">📁 Import Image</button>
+                <button class="button-95" id="gallery-import-video-btn">🎬 Import Video</button>
+                <button class="button-95" id="gallery-clear-btn">🗑️ Clear All</button>
+                <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
+                <input type="file" id="gallery-video-input" accept="video/*" style="display: none;">
+            </div>
+            
+            <!-- Gallery Tabs -->
+            <div class="gallery-tabs">
+                <button class="gallery-tab active" data-tab="photos">📷 Photos (<span id="photo-count">0</span>)</button>
+                <button class="gallery-tab" data-tab="videos">🎥 Videos (<span id="video-count">0</span>)</button>
+            </div>
+            
+            <!-- Gallery Grid -->
+            <div class="gallery-grid" id="gallery-photos-grid">
+                <div class="gallery-empty">
+                    <span>📷</span>
+                    <p>No photos yet. Capture some with the camera!</p>
+                </div>
+            </div>
+            <div class="gallery-grid" id="gallery-videos-grid" style="display: none;">
+                <div class="gallery-empty">
+                    <span>🎥</span>
+                    <p>No videos yet. Record some with the camera!</p>
+                </div>
+            </div>
+            
+            <!-- Selected Item Preview -->
+            <div class="gallery-preview" id="gallery-preview" style="display: none;">
+                <div class="gallery-preview-header">
+                    <span id="preview-title">Preview</span>
+                    <button class="title-bar-button" id="close-preview-btn">✕</button>
+                </div>
+                <div class="gallery-preview-content" id="gallery-preview-content"></div>
+                <div class="gallery-preview-actions">
+                    <button class="button-95" id="preview-wallpaper-btn">🎨 Set as Wallpaper</button>
+                    <button class="button-95" id="preview-download-btn">⬇️ Download</button>
+                    <button class="button-95" id="preview-delete-btn">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallpaper Settings Window -->
+    <div class="window" id="wallpaper-window" style="top: 100px; left: 300px; width: 500px; height: 450px;">
+        <div class="resize-handle resize-n"></div>
+        <div class="resize-handle resize-s"></div>
+        <div class="resize-handle resize-e"></div>
+        <div class="resize-handle resize-w"></div>
+        <div class="resize-handle resize-ne"></div>
+        <div class="resize-handle resize-nw"></div>
+        <div class="resize-handle resize-se"></div>
+        <div class="resize-handle resize-sw"></div>
+        <div class="title-bar">
+            <div class="title-bar-text">
+                <span>🎨</span>
+                <span>Display Properties - Wallpaper</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-bar-button minimize-btn">_</button>
+                <button class="title-bar-button maximize-btn">□</button>
+                <button class="title-bar-button close-btn">✕</button>
+            </div>
+        </div>
+        <div class="window-body wallpaper-body">
+            <div class="content-section">
+                <h2>Desktop Wallpaper</h2>
+                
+                <!-- Current Wallpaper Preview -->
+                <div class="wallpaper-preview-container">
+                    <div class="wallpaper-preview" id="wallpaper-preview">
+                        <div class="wallpaper-preview-inner" id="wallpaper-preview-inner"></div>
+                    </div>
+                    <span class="wallpaper-preview-label">Current Wallpaper</span>
+                </div>
+                
+                <!-- Wallpaper Options -->
+                <div class="wallpaper-options">
+                    <label>Select Wallpaper:</label>
+                    <div class="wallpaper-list" id="wallpaper-list">
+                        <div class="wallpaper-item active" data-wallpaper="default">
+                            <div class="wallpaper-thumb" style="background: #008080;"></div>
+                            <span>Default Teal</span>
+                        </div>
+                        <div class="wallpaper-item" data-wallpaper="clouds">
+                            <div class="wallpaper-thumb" style="background: linear-gradient(to bottom, #87ceeb, #fff);"></div>
+                            <span>Clouds</span>
+                        </div>
+                        <div class="wallpaper-item" data-wallpaper="sunset">
+                            <div class="wallpaper-thumb" style="background: linear-gradient(to bottom, #ff7e5f, #feb47b);"></div>
+                            <span>Sunset</span>
+                        </div>
+                        <div class="wallpaper-item" data-wallpaper="forest">
+                            <div class="wallpaper-thumb" style="background: linear-gradient(to bottom, #2d5016, #228b22);"></div>
+                            <span>Forest</span>
+                        </div>
+                        <div class="wallpaper-item" data-wallpaper="ocean">
+                            <div class="wallpaper-thumb" style="background: linear-gradient(to bottom, #1e3c72, #2a5298);"></div>
+                            <span>Ocean</span>
+                        </div>
+                        <div class="wallpaper-item" data-wallpaper="night">
+                            <div class="wallpaper-thumb" style="background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);"></div>
+                            <span>Night Sky</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Custom Wallpaper Section -->
+                <div class="wallpaper-custom">
+                    <label>Custom Wallpaper:</label>
+                    <div class="wallpaper-custom-options">
+                        <button class="button-95" id="wallpaper-from-gallery-btn">🖼️ From Gallery</button>
+                        <button class="button-95" id="wallpaper-from-file-btn">📁 Browse...</button>
+                        <input type="file" id="wallpaper-file-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                
+                <!-- Display Options -->
+                <div class="wallpaper-display-options">
+                    <label>Display:</label>
+                    <select id="wallpaper-display-mode" class="win95-select">
+                        <option value="cover">Stretch</option>
+                        <option value="contain">Fit</option>
+                        <option value="center">Center</option>
+                        <option value="repeat">Tile</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="wallpaper-buttons">
+                <button class="button-95" id="apply-wallpaper-btn">Apply</button>
+                <button class="button-95" id="reset-wallpaper-btn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mini Music Player - Always Visible on Right Side -->
+    <div class="mini-music-player" id="mini-player">
+        <div class="mini-player-header">
+            <span>🎵 Media Player</span>
+            <button class="mini-close-btn" id="mini-close">×</button>
+        </div>
+        
+        <div class="mini-player-display">
+            <div class="mini-track-name" id="mini-track-name">No track loaded</div>
+            <div class="mini-player-time">
+                <span id="mini-current-time">00:00</span>
+                <span id="mini-total-time">00:00</span>
+            </div>
+        </div>
+
+        <div class="mini-progress-container" id="mini-progress-container">
+            <div class="mini-progress-bar" id="mini-progress-bar"></div>
+        </div>
+
+        <div class="mini-controls">
+            <button class="mini-btn" id="mini-prev">⏮</button>
+            <button class="mini-btn" id="mini-play">▶</button>
+            <button class="mini-btn" id="mini-pause" style="display:none;">⏸</button>
+            <button class="mini-btn" id="mini-stop">⏹</button>
+            <button class="mini-btn" id="mini-next">⏭</button>
+        </div>
+
+        <div class="mini-volume">
+            <span>🔊</span>
+            <input type="range" class="mini-volume-slider" id="mini-volume" min="0" max="100" value="70">
+        </div>
+
+        <div class="mini-playlist-header">
+            <span>Playlist</span>
+            <button class="mini-expand-btn" id="expand-playlist">▼</button>
+        </div>
+
+        <div class="mini-playlist" id="mini-playlist">
+          <!-- Default tracks -->
+
+          <div class="mini-playlist-item" data-url="https://raw.githubusercontent.com/ttsudarshan/MUSIC/main/Eddie%20Vedder%20-%20Long%20Way.mp3">
+            <span>🎵Long way-Eddie Vedder</span>
+        </div>
+          <div class="mini-playlist-item" data-url="https://raw.githubusercontent.com/ttsudarshan/MUSIC/main/Something_In_the_way.mp3
+          ">
+            <span>🎵 Something in the way</span>
+        </div>
+          <div class="mini-playlist-item" data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+              <span>🎵 Fear of GOD</span>
+          </div>
+          <div class="mini-playlist-item" data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3">
+              <span>🎵 Get it done</span>
+          </div>
+          <div class="mini-playlist-item" data-url="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3">
+              <span>🎵 Best in the world</span>
+          </div>
+      </div>
+
+        <div class="mini-upload-section">
+            <label for="mini-file-input" class="mini-upload-label">
+                📁 Add Music
+            </label>
+            <input type="file" id="mini-file-input" accept="audio/*" multiple style="display: none;">
+        </div>
+
+        <!-- Hidden Audio Element -->
+        <audio id="mini-audio-player" preload="metadata"></audio>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <button class="start-button" id="start-btn">
+            <span style="font-size: 20px;">🪟</span>
+            <span>Start</span>
+        </button>
+        <div id="taskbar-windows"></div>
+        <div class="taskbar-time" id="time"></div>
+    </div>
+
+    <!-- Start Menu -->
+    <div class="start-menu" id="start-menu">
+        <div class="start-menu-header">Windows 95</div>
+        <div class="start-menu-items">
+            <div class="start-menu-item" data-window="about">
+                <span>💻</span>
+                <span>Biography</span>
+            </div>
+            <div class="start-menu-item" data-window="honors">
+                <span>🏆</span>
+                <span>Honors</span>
+            </div>
+            <div class="start-menu-item" data-window="projects">
+                <span>📁</span>
+                <span>Projects</span>
+            </div>
+            <div class="start-menu-item" data-window="skills">
+                <span>📄</span>
+                <span>Skills</span>
+            </div>
+            <div class="start-menu-item" data-window="cv">
+                <span>📋</span>
+                <span>CV</span>
+            </div>
+            <div class="start-menu-item" data-window="contact">
+                <span>✉️</span>
+                <span>Email</span>
+            </div>
+            <div class="start-menu-item" data-window="terminal" style="border-top: 1px solid var(--win95-dark-gray);">
+                <span>⌨️</span>
+                <span>Terminal</span>
+            </div>
+            <div class="start-menu-item" data-window="camera">
+                <span>📷</span>
+                <span>Camera</span>
+            </div>
+            <div class="start-menu-item" data-window="gallery">
+                <span>🖼️</span>
+                <span>Gallery</span>
+            </div>
+            <div class="start-menu-item" data-window="wallpaper">
+                <span>🎨</span>
+                <span>Wallpaper</span>
+            </div>
+            <div class="start-menu-item" id="shutdown-btn" style="border-top: 1px solid var(--win95-dark-gray);">
+                <span>🔌</span>
+                <span>Shut Down...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
