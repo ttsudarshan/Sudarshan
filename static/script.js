@@ -887,6 +887,41 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
     let currentPreviewItem = null;
     let currentPreviewType = null;
     
+    // Default images that come with the portfolio
+    const defaultImages = [
+        {
+            id: 'default-1',
+            data: '/static/images/NOV27.png',
+            timestamp: '2024-11-27T00:00:00.000Z',
+            type: 'photo',
+            name: 'NOV27.png',
+            isDefault: true
+        },
+        {
+            id: 'default-2',
+            data: '/static/images/nov27-2.png',
+            timestamp: '2024-11-27T00:00:00.000Z',
+            type: 'photo',
+            name: 'nov27-2.png',
+            isDefault: true
+        }
+    ];
+    
+    // Initialize gallery with default images
+    function initGalleryWithDefaults() {
+        // Load user photos from storage
+        let userPhotos = JSON.parse(localStorage.getItem('galleryPhotos') || '[]');
+        
+        // Filter out any old default images and keep only user photos
+        userPhotos = userPhotos.filter(p => !p.isDefault);
+        
+        // Combine default images with user photos (defaults at the end)
+        window.galleryPhotos = [...userPhotos, ...defaultImages];
+        
+        // Load videos
+        window.galleryVideos = JSON.parse(localStorage.getItem('galleryVideos') || '[]');
+    }
+    
     // Tab switching
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -963,9 +998,8 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
     
     // Refresh gallery
     window.refreshGallery = function() {
-        // Load from storage
-        window.galleryPhotos = JSON.parse(localStorage.getItem('galleryPhotos') || '[]');
-        window.galleryVideos = JSON.parse(localStorage.getItem('galleryVideos') || '[]');
+        // Re-initialize with defaults and user content
+        initGalleryWithDefaults();
         
         // Update counts
         if (photoCountEl) photoCountEl.textContent = window.galleryPhotos.length;
@@ -981,9 +1015,9 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             `;
         } else {
             photosGrid.innerHTML = window.galleryPhotos.map((photo, index) => `
-                <div class="gallery-item" data-type="photo" data-index="${index}">
+                <div class="gallery-item ${photo.isDefault ? 'default-item' : ''}" data-type="photo" data-index="${index}">
                     <img src="${photo.data}" alt="Photo ${index + 1}">
-                    <span class="gallery-item-type">📷</span>
+                    <span class="gallery-item-type">${photo.isDefault ? '📌' : '📷'}</span>
                 </div>
             `).join('');
         }
@@ -1063,10 +1097,18 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
     previewDeleteBtn.addEventListener('click', () => {
         if (!currentPreviewItem) return;
         
+        // Prevent deleting default images
+        if (currentPreviewItem.isDefault) {
+            alert('Cannot delete default portfolio images!');
+            return;
+        }
+        
         if (confirm('Delete this item?')) {
             if (currentPreviewType === 'photo') {
-                window.galleryPhotos = window.galleryPhotos.filter(p => p.id !== currentPreviewItem.id);
-                localStorage.setItem('galleryPhotos', JSON.stringify(window.galleryPhotos));
+                // Only remove from user photos in storage
+                let userPhotos = JSON.parse(localStorage.getItem('galleryPhotos') || '[]');
+                userPhotos = userPhotos.filter(p => p.id !== currentPreviewItem.id);
+                localStorage.setItem('galleryPhotos', JSON.stringify(userPhotos));
             } else {
                 window.galleryVideos = window.galleryVideos.filter(v => v.id !== currentPreviewItem.id);
                 localStorage.setItem('galleryVideos', JSON.stringify(window.galleryVideos));
