@@ -1217,12 +1217,12 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         
         // Render photos
         if (window.galleryPhotos.length === 0) {
-            photosGrid.innerHTML = `
-                <div class="gallery-empty">
-                    <span>📷</span>
-                    <p>No photos yet. Capture some with the camera!</p>
-                </div>
-            `;
+            // photosGrid.innerHTML = `
+            //     <div class="gallery-empty">
+            //         <span>📷</span>
+            //         <p>No photos yet. Capture some with the camera!</p>
+            //     </div>
+            // `;
         } else {
             photosGrid.innerHTML = window.galleryPhotos.map((photo, index) => `
                 <div class="gallery-item ${photo.isDefault ? 'default-item' : ''}" data-type="photo" data-index="${index}">
