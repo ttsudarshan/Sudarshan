@@ -1070,7 +1070,8 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
                     <div class="guestbook-item ${photo.visitor_id === visitorId ? 'own-photo' : ''}" 
                          data-id="${photo.id}" 
                          data-visitor="${photo.visitor_id}"
-                         data-url="${photo.image_url}">
+                         data-url="${photo.image_url}"
+                         data-name="${photo.visitor_name}">
                         <img src="${photo.image_url}" alt="${photo.visitor_name}">
                         <div class="guestbook-item-name">${photo.visitor_name}</div>
                         <div class="guestbook-item-date">${new Date(photo.created_at).toLocaleDateString()}</div>
@@ -1078,45 +1079,36 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
                 `).join('')}
             `;
             
-            // Add click handlers for own photos (deletion)
-            document.querySelectorAll('.guestbook-item.own-photo').forEach(item => {
-                item.addEventListener('click', async () => {
-                    if (confirm('Delete your photo from the guestbook?')) {
-                        const photoId = item.dataset.id;
-                        try {
-                            const res = await fetch(`/api/guestbook/delete/${photoId}`, {
-                                method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ visitor_id: visitorId })
-                            });
-                            const result = await res.json();
-                            if (result.success) {
-                                loadGuestbookPhotos();
-                            } else {
-                                alert('Failed to delete: ' + result.error);
-                            }
-                        } catch (err) {
-                            alert('Network error');
-                        }
-                    }
-                });
-            });
-            
-            // Add click handlers for viewing other photos
-            document.querySelectorAll('.guestbook-item:not(.own-photo)').forEach(item => {
+            // Add click handlers for ALL guestbook photos to open preview
+            document.querySelectorAll('.guestbook-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    const name = item.querySelector('.guestbook-item-name').textContent;
+                    const name = item.dataset.name;
                     const date = item.querySelector('.guestbook-item-date').textContent;
                     const imgUrl = item.dataset.url;
+                    const photoId = item.dataset.id;
+                    const isOwnPhoto = item.classList.contains('own-photo');
                     
                     previewTitle.textContent = `${name} - ${date}`;
                     previewContent.innerHTML = `<img src="${imgUrl}" alt="${name}">`;
                     previewWallpaperBtn.style.display = 'inline-block';
                     previewDownloadBtn.style.display = 'inline-block';
-                    previewDeleteBtn.style.display = 'none'; // Can't delete others' photos
+                    
+                    // Show delete button only for own photos
+                    if (isOwnPhoto) {
+                        previewDeleteBtn.style.display = 'inline-block';
+                        previewDeleteBtn.textContent = '🗑️ Delete';
+                    } else {
+                        previewDeleteBtn.style.display = 'none';
+                    }
+                    
                     preview.style.display = 'block';
                     
-                    currentPreviewItem = { data: imgUrl, visitor_name: name };
+                    currentPreviewItem = { 
+                        data: imgUrl, 
+                        visitor_name: name, 
+                        id: photoId,
+                        isOwnPhoto: isOwnPhoto
+                    };
                     currentPreviewType = 'guestbook';
                 });
             });
@@ -1275,13 +1267,19 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             currentPreviewItem = window.galleryPhotos[index];
             previewContent.innerHTML = `<img src="${currentPreviewItem.data}" alt="Preview">`;
             previewWallpaperBtn.style.display = 'inline-block';
+            // Show delete button (but not for default images)
+            previewDeleteBtn.style.display = 'inline-block';
+            previewDeleteBtn.textContent = '🗑️ Delete';
         } else {
             currentPreviewItem = window.galleryVideos[index];
             previewContent.innerHTML = `<video src="${currentPreviewItem.data}" controls></video>`;
             previewWallpaperBtn.style.display = 'none';
+            previewDeleteBtn.style.display = 'inline-block';
+            previewDeleteBtn.textContent = '🗑️ Delete';
         }
         
         previewTitle.textContent = currentPreviewItem.name || `${type} - ${new Date(currentPreviewItem.timestamp).toLocaleString()}`;
+        previewDownloadBtn.style.display = 'inline-block';
         preview.style.display = 'block';
     }
     
@@ -1294,10 +1292,16 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
     
     // Set as wallpaper
     previewWallpaperBtn.addEventListener('click', () => {
-        if (currentPreviewItem && currentPreviewType === 'photo') {
-            setWallpaper(currentPreviewItem.data, 'cover');
-            alert('🎨 Wallpaper updated!');
-            preview.style.display = 'none';
+        if (currentPreviewItem) {
+            if (currentPreviewType === 'photo') {
+                setWallpaper(currentPreviewItem.data, 'cover');
+                alert('🎨 Wallpaper updated!');
+                preview.style.display = 'none';
+            } else if (currentPreviewType === 'guestbook') {
+                setWallpaper(currentPreviewItem.data, 'cover');
+                alert('🎨 Wallpaper updated!');
+                preview.style.display = 'none';
+            }
         }
     });
     
@@ -1306,13 +1310,18 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         if (!currentPreviewItem) return;
         
         const link = document.createElement('a');
-        link.href = currentPreviewItem.data;
-        link.download = currentPreviewItem.name || `${currentPreviewType}_${Date.now()}.${currentPreviewType === 'photo' ? 'png' : 'webm'}`;
+        if (currentPreviewType === 'guestbook') {
+            link.href = currentPreviewItem.data;
+            link.download = `guestbook_${currentPreviewItem.visitor_name || 'photo'}_${Date.now()}.png`;
+        } else {
+            link.href = currentPreviewItem.data;
+            link.download = currentPreviewItem.name || `${currentPreviewType}_${Date.now()}.${currentPreviewType === 'photo' ? 'png' : 'webm'}`;
+        }
         link.click();
     });
     
     // Delete
-    previewDeleteBtn.addEventListener('click', () => {
+    previewDeleteBtn.addEventListener('click', async () => {
         if (!currentPreviewItem) return;
         
         // Prevent deleting default images
@@ -1321,6 +1330,35 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             return;
         }
         
+        // Handle guestbook deletion
+        if (currentPreviewType === 'guestbook') {
+            if (!currentPreviewItem.isOwnPhoto) {
+                alert('You can only delete your own photos!');
+                return;
+            }
+            
+            if (confirm('Delete your photo from the guestbook?')) {
+                try {
+                    const res = await fetch(`/api/guestbook/delete/${currentPreviewItem.id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ visitor_id: visitorId })
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        preview.style.display = 'none';
+                        loadGuestbookPhotos();
+                    } else {
+                        alert('Failed to delete: ' + result.error);
+                    }
+                } catch (err) {
+                    alert('Network error');
+                }
+            }
+            return;
+        }
+        
+        // Handle gallery photo/video deletion
         if (confirm('Delete this item?')) {
             if (currentPreviewType === 'photo') {
                 // Only remove from user photos in storage
