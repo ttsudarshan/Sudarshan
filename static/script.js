@@ -668,6 +668,10 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         wallpaperCaptureBtn.disabled = false;
         downloadCaptureBtn.disabled = false;
         
+        // Enable guestbook button
+        const saveGuestbookBtn = document.getElementById('save-guestbook-btn');
+        if (saveGuestbookBtn) saveGuestbookBtn.disabled = false;
+        
         // Visual feedback
         overlay.classList.remove('hidden');
         overlay.innerHTML = '<span>📸 Photo captured!</span>';
@@ -862,12 +866,94 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         
         link.click();
     });
+    
+    // Save to Guestbook functionality
+    const saveGuestbookBtn = document.getElementById('save-guestbook-btn');
+    const guestbookNameSection = document.getElementById('guestbook-name-section');
+    const guestbookNameInput = document.getElementById('guestbook-name-input');
+    const confirmGuestbookBtn = document.getElementById('confirm-guestbook-btn');
+    const cancelGuestbookBtn = document.getElementById('cancel-guestbook-btn');
+    
+    if (saveGuestbookBtn) {
+        saveGuestbookBtn.addEventListener('click', () => {
+            if (!lastCapture || lastCaptureType !== 'photo') return;
+            
+            // Show name input section
+            guestbookNameSection.style.display = 'block';
+            guestbookNameInput.focus();
+        });
+    }
+    
+    if (cancelGuestbookBtn) {
+        cancelGuestbookBtn.addEventListener('click', () => {
+            guestbookNameSection.style.display = 'none';
+            guestbookNameInput.value = '';
+        });
+    }
+    
+    if (confirmGuestbookBtn) {
+        confirmGuestbookBtn.addEventListener('click', async () => {
+            if (!lastCapture || lastCaptureType !== 'photo') return;
+            
+            const name = guestbookNameInput.value.trim() || 'Anonymous Visitor';
+            const visitorId = window.visitorId || localStorage.getItem('guestbook_visitor_id');
+            
+            confirmGuestbookBtn.disabled = true;
+            confirmGuestbookBtn.textContent = '⏳ Saving...';
+            
+            try {
+                const response = await fetch('/api/guestbook/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: lastCapture,
+                        name: name,
+                        visitor_id: visitorId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('🎉 Photo saved to guestbook! Thanks for visiting!');
+                    guestbookNameSection.style.display = 'none';
+                    guestbookNameInput.value = '';
+                    
+                    // Open gallery and switch to guestbook tab
+                    const galleryWindow = document.getElementById('gallery-window');
+                    galleryWindow.classList.add('active');
+                    bringToFront(galleryWindow);
+                    updateTaskbar();
+                    
+                    // Switch to guestbook tab
+                    document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="guestbook"]').classList.add('active');
+                    document.getElementById('gallery-photos-grid').style.display = 'none';
+                    document.getElementById('gallery-videos-grid').style.display = 'none';
+                    document.getElementById('gallery-guestbook-grid').style.display = 'grid';
+                    
+                    // Reload guestbook
+                    if (window.loadGuestbookPhotos) {
+                        window.loadGuestbookPhotos();
+                    }
+                } else {
+                    alert('❌ Failed to save: ' + (result.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('❌ Network error. Please try again.');
+            }
+            
+            confirmGuestbookBtn.disabled = false;
+            confirmGuestbookBtn.textContent = '✓ Confirm & Save';
+        });
+    }
 })();
 
 // ========== GALLERY FUNCTIONALITY ==========
 (function() {
     const photosGrid = document.getElementById('gallery-photos-grid');
     const videosGrid = document.getElementById('gallery-videos-grid');
+    const guestbookGrid = document.getElementById('gallery-guestbook-grid');
     const tabs = document.querySelectorAll('.gallery-tab');
     const importBtn = document.getElementById('gallery-import-btn');
     const importVideoBtn = document.getElementById('gallery-import-video-btn');
@@ -883,9 +969,18 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
     const previewDeleteBtn = document.getElementById('preview-delete-btn');
     const photoCountEl = document.getElementById('photo-count');
     const videoCountEl = document.getElementById('video-count');
+    const guestbookCountEl = document.getElementById('guestbook-count');
     
     let currentPreviewItem = null;
     let currentPreviewType = null;
+    
+    // Visitor ID for guestbook
+    let visitorId = localStorage.getItem('guestbook_visitor_id');
+    if (!visitorId) {
+        visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('guestbook_visitor_id', visitorId);
+    }
+    window.visitorId = visitorId;
     
     // Default images that come with the portfolio
     const defaultImages = [
@@ -921,6 +1016,129 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         // Load videos
         window.galleryVideos = JSON.parse(localStorage.getItem('galleryVideos') || '[]');
     }
+    
+    // Tab switching
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            const tabName = tab.dataset.tab;
+            photosGrid.style.display = tabName === 'photos' ? 'grid' : 'none';
+            videosGrid.style.display = tabName === 'videos' ? 'grid' : 'none';
+            guestbookGrid.style.display = tabName === 'guestbook' ? 'grid' : 'none';
+            
+            // Show/hide import buttons based on tab
+            if (importBtn) importBtn.style.display = tabName === 'photos' ? 'inline-block' : 'none';
+            if (importVideoBtn) importVideoBtn.style.display = tabName === 'videos' ? 'inline-block' : 'none';
+            
+            // Load guestbook photos when tab is selected
+            if (tabName === 'guestbook') {
+                loadGuestbookPhotos();
+            }
+        });
+    });
+    
+    // Load guestbook photos from server
+    async function loadGuestbookPhotos() {
+        try {
+            const response = await fetch('/api/guestbook/photos');
+            const data = await response.json();
+            
+            if (guestbookCountEl) {
+                guestbookCountEl.textContent = data.photos ? data.photos.length : 0;
+            }
+            
+            if (!data.photos || data.photos.length === 0) {
+                guestbookGrid.innerHTML = `
+                    <div class="guestbook-header">
+                        <h3>✨ They were all here! ✨</h3>
+                    </div>
+                    <div class="guestbook-empty">
+                        <span>🌟</span>
+                        <p>Be the first to leave your mark!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            guestbookGrid.innerHTML = `
+                <div class="guestbook-header">
+                    <h3>✨ They were all here! ✨</h3>
+                </div>
+                ${data.photos.map(photo => `
+                    <div class="guestbook-item ${photo.visitor_id === visitorId ? 'own-photo' : ''}" 
+                         data-id="${photo.id}" 
+                         data-visitor="${photo.visitor_id}"
+                         data-url="${photo.image_url}">
+                        <img src="${photo.image_url}" alt="${photo.visitor_name}">
+                        <div class="guestbook-item-name">${photo.visitor_name}</div>
+                        <div class="guestbook-item-date">${new Date(photo.created_at).toLocaleDateString()}</div>
+                    </div>
+                `).join('')}
+            `;
+            
+            // Add click handlers for own photos (deletion)
+            document.querySelectorAll('.guestbook-item.own-photo').forEach(item => {
+                item.addEventListener('click', async () => {
+                    if (confirm('Delete your photo from the guestbook?')) {
+                        const photoId = item.dataset.id;
+                        try {
+                            const res = await fetch(`/api/guestbook/delete/${photoId}`, {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ visitor_id: visitorId })
+                            });
+                            const result = await res.json();
+                            if (result.success) {
+                                loadGuestbookPhotos();
+                            } else {
+                                alert('Failed to delete: ' + result.error);
+                            }
+                        } catch (err) {
+                            alert('Network error');
+                        }
+                    }
+                });
+            });
+            
+            // Add click handlers for viewing other photos
+            document.querySelectorAll('.guestbook-item:not(.own-photo)').forEach(item => {
+                item.addEventListener('click', () => {
+                    const name = item.querySelector('.guestbook-item-name').textContent;
+                    const date = item.querySelector('.guestbook-item-date').textContent;
+                    const imgUrl = item.dataset.url;
+                    
+                    previewTitle.textContent = `${name} - ${date}`;
+                    previewContent.innerHTML = `<img src="${imgUrl}" alt="${name}">`;
+                    previewWallpaperBtn.style.display = 'inline-block';
+                    previewDownloadBtn.style.display = 'inline-block';
+                    previewDeleteBtn.style.display = 'none'; // Can't delete others' photos
+                    preview.style.display = 'block';
+                    
+                    currentPreviewItem = { data: imgUrl, visitor_name: name };
+                    currentPreviewType = 'guestbook';
+                });
+            });
+        } catch (err) {
+            console.error('Failed to load guestbook:', err);
+            guestbookGrid.innerHTML = `
+                <div class="guestbook-header">
+                    <h3>✨ They were all here! ✨</h3>
+                </div>
+                <div class="guestbook-empty">
+                    <span>⚠️</span>
+                    <p>Could not load guestbook. Server may not be configured.</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Make loadGuestbookPhotos available globally
+    window.loadGuestbookPhotos = loadGuestbookPhotos;
+    
+    // Initial load - guestbook tab is active by default
+    loadGuestbookPhotos();
     
     // Tab switching
     tabs.forEach(tab => {

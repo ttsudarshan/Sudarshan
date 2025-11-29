@@ -1100,6 +1100,108 @@ label {
 }
 
 /* ========== MINI MUSIC PLAYER STYLES ========== */
+
+/* ========== GUESTBOOK IN GALLERY STYLES ========== */
+.guestbook-grid {
+  padding: 10px;
+}
+
+.guestbook-header {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.guestbook-header h3 {
+  margin: 0;
+  font-size: 14px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.guestbook-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--win95-dark-gray);
+  padding: 30px;
+}
+
+.guestbook-empty span {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.guestbook-item {
+  background: var(--win95-gray);
+  border: 2px solid;
+  border-color: var(--win95-border-light) var(--win95-border-dark) var(--win95-border-dark) var(--win95-border-light);
+  padding: 5px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+  position: relative;
+}
+
+.guestbook-item:hover {
+  transform: scale(1.02);
+  border-color: var(--win95-blue);
+}
+
+.guestbook-item img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid var(--win95-dark-gray);
+}
+
+.guestbook-item-name {
+  font-size: 10px;
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
+}
+
+.guestbook-item-date {
+  font-size: 9px;
+  color: var(--win95-dark-gray);
+}
+
+.guestbook-item.own-photo {
+  border-color: #22c55e;
+}
+
+.guestbook-item.own-photo::after {
+  content: '✓ You';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #22c55e;
+  color: white;
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* Guestbook name input in camera */
+#guestbook-name-section {
+  background: #ffffcc;
+  padding: 10px;
+  border: 2px solid var(--win95-dark-gray);
+  margin-top: 10px;
+}
+
+#guestbook-name-input {
+  width: calc(100% - 10px);
+  margin-bottom: 8px;
+}
+
+/* ========== MINI MUSIC PLAYER STYLES ==========  */
 .mini-music-player {
   position: fixed;
   right: 20px;

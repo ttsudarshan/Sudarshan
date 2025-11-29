@@ -9,10 +9,24 @@ import os
 import json
 from datetime import datetime
 import uuid
+import base64
+import requests
 
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
+
+# Supabase Configuration - Set these as environment variables
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+SUPABASE_BUCKET = 'guestbook-photos'
+
+def get_supabase_headers():
+    return {
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'Content-Type': 'application/json'
+    }
 
 # ============================================================================
 # VIRTUAL FILE SYSTEM - Maps to your portfolio HTML sections
@@ -390,6 +404,209 @@ def view_messages():
             """
     
     html += "</body></html>"
+    return html
+
+# ============================================================================
+# GUESTBOOK API ROUTES - Visitor Photos with Supabase
+# ============================================================================
+
+@app.route('/api/guestbook/photos', methods=['GET'])
+def get_guestbook_photos():
+    """Get all guestbook photos from Supabase"""
+    try:
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            return jsonify({'success': False, 'error': 'Supabase not configured', 'photos': []})
+        
+        # Query Supabase for photos
+        response = requests.get(
+            f'{SUPABASE_URL}/rest/v1/guestbook_photos?select=*&order=created_at.desc',
+            headers=get_supabase_headers()
+        )
+        
+        if response.status_code == 200:
+            photos = response.json()
+            return jsonify({'success': True, 'photos': photos})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to fetch photos', 'photos': []})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'photos': []})
+
+@app.route('/api/guestbook/upload', methods=['POST'])
+def upload_guestbook_photo():
+    """Upload a new guestbook photo"""
+    try:
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            return jsonify({'success': False, 'error': 'Supabase not configured'})
+        
+        data = request.json
+        image_data = data.get('image')  # Base64 image
+        visitor_name = data.get('name', 'Anonymous')[:50]  # Limit name length
+        visitor_id = data.get('visitor_id')  # Unique ID for this visitor's session
+        
+        if not image_data or not visitor_id:
+            return jsonify({'success': False, 'error': 'Missing image or visitor ID'})
+        
+        # Generate unique filename
+        filename = f"{uuid.uuid4()}.png"
+        
+        # Remove data URL prefix if present
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+        
+        # Upload image to Supabase Storage
+        image_bytes = base64.b64decode(image_data)
+        
+        upload_response = requests.post(
+            f'{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}',
+            headers={
+                'apikey': SUPABASE_KEY,
+                'Authorization': f'Bearer {SUPABASE_KEY}',
+                'Content-Type': 'image/png'
+            },
+            data=image_bytes
+        )
+        
+        if upload_response.status_code not in [200, 201]:
+            return jsonify({'success': False, 'error': 'Failed to upload image'})
+        
+        # Get public URL for the image
+        image_url = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}'
+        
+        # Save photo metadata to database
+        photo_data = {
+            'visitor_name': visitor_name,
+            'visitor_id': visitor_id,
+            'image_url': image_url,
+            'filename': filename,
+            'created_at': datetime.utcnow().isoformat()
+        }
+        
+        db_response = requests.post(
+            f'{SUPABASE_URL}/rest/v1/guestbook_photos',
+            headers=get_supabase_headers(),
+            json=photo_data
+        )
+        
+        if db_response.status_code in [200, 201]:
+            return jsonify({'success': True, 'photo': photo_data})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to save photo metadata'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/guestbook/delete/<photo_id>', methods=['DELETE'])
+def delete_guestbook_photo(photo_id):
+    """Delete a guestbook photo (only by owner or admin)"""
+    try:
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            return jsonify({'success': False, 'error': 'Supabase not configured'})
+        
+        data = request.json
+        visitor_id = data.get('visitor_id')
+        is_admin = data.get('admin_key') == os.environ.get('ADMIN_KEY', 'your-secret-admin-key')
+        
+        # First, get the photo to check ownership and get filename
+        photo_response = requests.get(
+            f'{SUPABASE_URL}/rest/v1/guestbook_photos?id=eq.{photo_id}&select=*',
+            headers=get_supabase_headers()
+        )
+        
+        if photo_response.status_code != 200 or not photo_response.json():
+            return jsonify({'success': False, 'error': 'Photo not found'})
+        
+        photo = photo_response.json()[0]
+        
+        # Check if user owns this photo or is admin
+        if not is_admin and photo.get('visitor_id') != visitor_id:
+            return jsonify({'success': False, 'error': 'Not authorized to delete this photo'})
+        
+        # Delete from storage
+        filename = photo.get('filename')
+        if filename:
+            requests.delete(
+                f'{SUPABASE_URL}/storage/v1/object/{SUPABASE_BUCKET}/{filename}',
+                headers={
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': f'Bearer {SUPABASE_KEY}'
+                }
+            )
+        
+        # Delete from database
+        delete_response = requests.delete(
+            f'{SUPABASE_URL}/rest/v1/guestbook_photos?id=eq.{photo_id}',
+            headers=get_supabase_headers()
+        )
+        
+        if delete_response.status_code in [200, 204]:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to delete photo'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/admin/guestbook')
+def admin_guestbook():
+    """Admin page to view and manage guestbook photos"""
+    admin_key = request.args.get('key', '')
+    expected_key = os.environ.get('ADMIN_KEY', 'your-secret-admin-key')
+    
+    if admin_key != expected_key:
+        return "Unauthorized. Add ?key=YOUR_ADMIN_KEY to access.", 403
+    
+    html = """
+    <html>
+    <head>
+        <title>Guestbook Admin - Sudarshan's Portfolio</title>
+        <style>
+            body { font-family: 'MS Sans Serif', Arial; margin: 20px; background: #c0c0c0; }
+            .header { background: #000080; color: white; padding: 10px; margin-bottom: 15px; }
+            .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+            .photo-card { background: white; padding: 10px; border: 2px solid #808080; }
+            .photo-card img { width: 100%; height: 150px; object-fit: cover; }
+            .photo-card p { margin: 5px 0; font-size: 12px; }
+            .delete-btn { background: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        </style>
+    </head>
+    <body>
+        <div class="header"><h1>📸 Guestbook Admin</h1></div>
+        <div id="photos" class="photo-grid">Loading...</div>
+        <script>
+            const ADMIN_KEY = '""" + expected_key + """';
+            async function loadPhotos() {
+                const res = await fetch('/api/guestbook/photos');
+                const data = await res.json();
+                const container = document.getElementById('photos');
+                if (!data.photos || data.photos.length === 0) {
+                    container.innerHTML = '<p>No photos yet</p>';
+                    return;
+                }
+                container.innerHTML = data.photos.map(p => `
+                    <div class="photo-card">
+                        <img src="${p.image_url}" alt="${p.visitor_name}">
+                        <p><strong>${p.visitor_name}</strong></p>
+                        <p>${new Date(p.created_at).toLocaleString()}</p>
+                        <p style="font-size:10px;color:#666;">ID: ${p.visitor_id}</p>
+                        <button class="delete-btn" onclick="deletePhoto('${p.id}')">Delete</button>
+                    </div>
+                `).join('');
+            }
+            async function deletePhoto(id) {
+                if (!confirm('Delete this photo?')) return;
+                await fetch('/api/guestbook/delete/' + id, {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({admin_key: ADMIN_KEY})
+                });
+                loadPhotos();
+            }
+            loadPhotos();
+        </script>
+    </body>
+    </html>
+    """
     return html
 
 # Session storage
