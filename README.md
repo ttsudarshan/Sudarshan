@@ -25,8 +25,7 @@ win95-portfolio/
 
 ### 3. Open in Browser
 
-Navigate to: https://sudarshandev.onrender.com/
-
+Navigate to: https://www.sudarshantwry.org/
 ## ⌨️ Terminal Commands
 
 | Command | Description |
