@@ -40,7 +40,7 @@
         </div>
         <div class="desktop-icon" data-window="contact" style="top: 230px; left: 10px;">
             <div class="icon-placeholder icon-email">✉️</div>
-            <span>Email</span>
+            <span>Contact me</span>
         </div>
         <div class="desktop-icon" data-window="cv" style="top: 230px; left: 110px;">
             <div class="icon-placeholder" style="background: linear-gradient(135deg, #1e40af 0%, #60a5fa 100%);">📋</div>
@@ -388,7 +388,7 @@
             </div>
 
             <div class="content-section">
-                <label>📧 Email:</label>
+                <label>📧 Contact-Me:</label>
                 <input type="text" value="sudarshantiwary09@gmail.com" readonly onclick="window.location.href='sudarshantiwary09@gmail.com'" style="cursor: pointer;">
 
                 <label>📱 Phone:</label>
@@ -497,6 +497,8 @@ Type 'open &lt;file&gt;' to open files in GUI windows.
                 </div>
                 <!-- Timer display -->
                 <div class="camera-timer" id="camera-timer">00:00</div>
+                <!-- Countdown overlay for 3s timer -->
+                <div class="countdown-overlay" id="countdown-overlay"></div>
                 <!-- Camera frame overlay -->
                 <div class="camera-frame"></div>
             </div>
@@ -508,6 +510,9 @@ Type 'open &lt;file&gt;' to open files in GUI windows.
                 </button>
                 <button class="button-95 camera-btn" id="stop-camera-btn" disabled>
                     <span>⏹</span> Stop
+                </button>
+                <button class="button-95 camera-btn" id="timer-capture-btn" disabled>
+                    <span>⏱️</span> 3s
                 </button>
                 <button class="button-95 camera-btn" id="switch-camera-btn" disabled>
                     <span>🔄</span> Switch

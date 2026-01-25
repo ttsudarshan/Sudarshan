@@ -560,6 +560,7 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             switchCameraBtn.disabled = false;
             capturePhotoBtn.disabled = false;
             recordVideoBtn.disabled = false;
+            document.getElementById('timer-capture-btn').disabled = false;
         } catch (err) {
             console.error('Error accessing camera:', err);
             overlay.innerHTML = `<span>❌ Camera access denied<br><small>${err.message}</small></span>`;
@@ -601,6 +602,7 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         stopRecordBtn.disabled = true;
         stopRecordBtn.style.display = 'none';
         recordVideoBtn.style.display = 'flex';
+        document.getElementById('timer-capture-btn').disabled = true;
         
         // Stop recording if active
         if (isRecording) {
@@ -639,6 +641,38 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
     
     // Capture photo
     capturePhotoBtn.addEventListener('click', () => {
+        capturePhoto();
+    });
+    
+    // 3-second timer capture
+    const timerCaptureBtn = document.getElementById('timer-capture-btn');
+    const countdownOverlay = document.getElementById('countdown-overlay');
+    
+    timerCaptureBtn.addEventListener('click', () => {
+        if (!stream) return;
+        
+        let countdown = 3;
+        timerCaptureBtn.disabled = true;
+        capturePhotoBtn.disabled = true;
+        
+        countdownOverlay.classList.add('active');
+        countdownOverlay.textContent = countdown;
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                countdownOverlay.textContent = countdown;
+            } else {
+                clearInterval(countdownInterval);
+                countdownOverlay.classList.remove('active');
+                capturePhoto();
+                timerCaptureBtn.disabled = false;
+                capturePhotoBtn.disabled = false;
+            }
+        }, 1000);
+    });
+    
+    function capturePhoto() {
         if (!stream) return;
         
         canvas.width = video.videoWidth;
@@ -678,7 +712,7 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
         setTimeout(() => {
             overlay.classList.add('hidden');
         }, 500);
-    });
+    }
     
     // Record video
     recordVideoBtn.addEventListener('click', () => {
