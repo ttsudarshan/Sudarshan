@@ -935,15 +935,12 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             confirmGuestbookBtn.disabled = true;
             confirmGuestbookBtn.textContent = '⏳ Saving...';
             
-            // Compress image before upload (resize to max 800px and use JPEG)
-            const compressedImage = await compressImage(lastCapture, 800, 0.7);
-            
             try {
                 const response = await fetch('/api/guestbook/upload', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        image: compressedImage,
+                        image: lastCapture,
                         name: name,
                         visitor_id: visitorId
                     })
@@ -982,37 +979,6 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             
             confirmGuestbookBtn.disabled = false;
             confirmGuestbookBtn.textContent = '✓ Confirm & Save';
-        });
-    }
-    
-    // Compress image to reduce upload size
-    function compressImage(dataUrl, maxSize, quality) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                
-                // Scale down if larger than maxSize
-                if (width > height && width > maxSize) {
-                    height = (height * maxSize) / width;
-                    width = maxSize;
-                } else if (height > maxSize) {
-                    width = (width * maxSize) / height;
-                    height = maxSize;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to JPEG with compression
-                resolve(canvas.toDataURL('image/jpeg', quality));
-            };
-            img.src = dataUrl;
         });
     }
 })();
@@ -1148,7 +1114,38 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             `;
             
             // Add click handlers for ALL guestbook photos to open preview
-            attachGuestbookClickHandlers();
+            document.querySelectorAll('.guestbook-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const name = item.dataset.name;
+                    const date = item.querySelector('.guestbook-item-date').textContent;
+                    const imgUrl = item.dataset.url;
+                    const photoId = item.dataset.id;
+                    const isOwnPhoto = item.classList.contains('own-photo');
+                    
+                    previewTitle.textContent = `${name} - ${date}`;
+                    previewContent.innerHTML = `<img src="${imgUrl}" alt="${name}">`;
+                    previewWallpaperBtn.style.display = 'inline-block';
+                    previewDownloadBtn.style.display = 'inline-block';
+                    
+                    // Show delete button only for own photos
+                    if (isOwnPhoto) {
+                        previewDeleteBtn.style.display = 'inline-block';
+                        previewDeleteBtn.textContent = '🗑️ Delete';
+                    } else {
+                        previewDeleteBtn.style.display = 'none';
+                    }
+                    
+                    preview.style.display = 'block';
+                    
+                    currentPreviewItem = { 
+                        data: imgUrl, 
+                        visitor_name: name, 
+                        id: photoId,
+                        isOwnPhoto: isOwnPhoto
+                    };
+                    currentPreviewType = 'guestbook';
+                });
+            });
         } catch (err) {
             console.error('Failed to load guestbook:', err);
             guestbookGrid.innerHTML = `
@@ -1162,108 +1159,6 @@ document.addEventListener('dragstart', (e) => e.preventDefault());
             `;
         }
     }
-    
-    // Attach click handlers to guestbook items
-    function attachGuestbookClickHandlers() {
-        document.querySelectorAll('.guestbook-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const name = item.dataset.name;
-                const date = item.querySelector('.guestbook-item-date').textContent;
-                const imgUrl = item.dataset.url;
-                const photoId = item.dataset.id;
-                const isOwnPhoto = item.classList.contains('own-photo');
-                
-                previewTitle.textContent = `${name} - ${date}`;
-                previewContent.innerHTML = `<img src="${imgUrl}" alt="${name}">`;
-                previewWallpaperBtn.style.display = 'inline-block';
-                previewDownloadBtn.style.display = 'inline-block';
-                
-                // Show delete button only for own photos
-                if (isOwnPhoto) {
-                    previewDeleteBtn.style.display = 'inline-block';
-                    previewDeleteBtn.textContent = '🗑️ Delete';
-                } else {
-                    previewDeleteBtn.style.display = 'none';
-                }
-                
-                preview.style.display = 'block';
-                
-                currentPreviewItem = { 
-                    data: imgUrl, 
-                    visitor_name: name, 
-                    id: photoId,
-                    isOwnPhoto: isOwnPhoto
-                };
-                currentPreviewType = 'guestbook';
-            });
-        });
-    }
-    
-    // Real-time guestbook updates via Server-Sent Events
-    let guestbookEventSource = null;
-    
-    function connectGuestbookSSE() {
-        if (guestbookEventSource) {
-            guestbookEventSource.close();
-        }
-        
-        guestbookEventSource = new EventSource('/api/guestbook/stream');
-        
-        guestbookEventSource.onmessage = function(event) {
-            try {
-                const message = JSON.parse(event.data);
-                
-                if (message.type === 'new_photo') {
-                    console.log('🎉 New guestbook photo received!', message.data);
-                    // Reload the guestbook to show new photo
-                    loadGuestbookPhotos();
-                    
-                    // Show notification if gallery window is not active
-                    const galleryWindow = document.getElementById('gallery-window');
-                    if (!galleryWindow.classList.contains('active')) {
-                        showGuestbookNotification(message.data.visitor_name);
-                    }
-                } else if (message.type === 'delete_photo') {
-                    console.log('🗑️ Guestbook photo deleted:', message.data);
-                    // Reload to reflect deletion
-                    loadGuestbookPhotos();
-                }
-            } catch (err) {
-                console.log('SSE message parse error:', err);
-            }
-        };
-        
-        guestbookEventSource.onerror = function(err) {
-            console.log('SSE connection error, will reconnect...');
-            guestbookEventSource.close();
-            // Reconnect after 5 seconds
-            setTimeout(connectGuestbookSSE, 5000);
-        };
-    }
-    
-    // Show notification for new guestbook photo
-    function showGuestbookNotification(visitorName) {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = 'guestbook-notification';
-        notification.innerHTML = `
-            <span>📸</span>
-            <span>${visitorName || 'Someone'} just joined the guestbook!</span>
-        `;
-        document.body.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => notification.classList.add('show'), 10);
-        
-        // Remove after 4 seconds
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 4000);
-    }
-    
-    // Start SSE connection when page loads
-    connectGuestbookSSE();
     
     // Make loadGuestbookPhotos available globally
     window.loadGuestbookPhotos = loadGuestbookPhotos;
