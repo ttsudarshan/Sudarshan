@@ -3,7 +3,7 @@ Windows 95 Portfolio - Flask Backend
 Interactive terminal interface for portfolio website
 """
 
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, Response
 from flask_cors import CORS
 import os
 import json
@@ -11,10 +11,16 @@ from datetime import datetime
 import uuid
 import base64
 import requests
+import queue
+import threading
 
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
+
+# SSE clients for real-time guestbook updates
+guestbook_clients = []
+guestbook_lock = threading.Lock()
 
 # Supabase Configuration - Set these as environment variables
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
@@ -410,6 +416,56 @@ def view_messages():
 # GUESTBOOK API ROUTES - Visitor Photos with Supabase
 # ============================================================================
 
+@app.route('/api/guestbook/stream')
+def guestbook_stream():
+    """SSE endpoint for real-time guestbook updates"""
+    def event_stream():
+        q = queue.Queue()
+        with guestbook_lock:
+            guestbook_clients.append(q)
+        try:
+            # Send initial connection message
+            yield f"data: {json.dumps({'type': 'connected'})}\n\n"
+            while True:
+                try:
+                    # Wait for new events with timeout to keep connection alive
+                    data = q.get(timeout=30)
+                    yield f"data: {json.dumps(data)}\n\n"
+                except queue.Empty:
+                    # Send keepalive ping
+                    yield f": ping\n\n"
+        except GeneratorExit:
+            pass
+        finally:
+            with guestbook_lock:
+                if q in guestbook_clients:
+                    guestbook_clients.remove(q)
+    
+    return Response(
+        event_stream(),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+def notify_guestbook_clients(event_type, data):
+    """Send event to all connected SSE clients"""
+    message = {'type': event_type, 'data': data}
+    with guestbook_lock:
+        dead_clients = []
+        for client_queue in guestbook_clients:
+            try:
+                client_queue.put_nowait(message)
+            except:
+                dead_clients.append(client_queue)
+        # Remove dead clients
+        for dead in dead_clients:
+            if dead in guestbook_clients:
+                guestbook_clients.remove(dead)
+
 @app.route('/api/guestbook/photos', methods=['GET'])
 def get_guestbook_photos():
     """Get all guestbook photos from Supabase"""
@@ -447,8 +503,15 @@ def upload_guestbook_photo():
         if not image_data or not visitor_id:
             return jsonify({'success': False, 'error': 'Missing image or visitor ID'})
         
+        # Detect image type from data URL
+        content_type = 'image/jpeg'
+        file_ext = 'jpg'
+        if image_data.startswith('data:image/png'):
+            content_type = 'image/png'
+            file_ext = 'png'
+        
         # Generate unique filename
-        filename = f"{uuid.uuid4()}.png"
+        filename = f"{uuid.uuid4()}.{file_ext}"
         
         # Remove data URL prefix if present
         if ',' in image_data:
@@ -462,7 +525,7 @@ def upload_guestbook_photo():
             headers={
                 'apikey': SUPABASE_KEY,
                 'Authorization': f'Bearer {SUPABASE_KEY}',
-                'Content-Type': 'image/png'
+                'Content-Type': content_type
             },
             data=image_bytes
         )
@@ -489,6 +552,8 @@ def upload_guestbook_photo():
         )
         
         if db_response.status_code in [200, 201]:
+            # Notify all connected clients about the new photo
+            notify_guestbook_clients('new_photo', photo_data)
             return jsonify({'success': True, 'photo': photo_data})
         else:
             return jsonify({'success': False, 'error': 'Failed to save photo metadata'})
@@ -540,6 +605,8 @@ def delete_guestbook_photo(photo_id):
         )
         
         if delete_response.status_code in [200, 204]:
+            # Notify all connected clients about the deletion
+            notify_guestbook_clients('delete_photo', {'id': photo_id})
             return jsonify({'success': True})
         else:
             return jsonify({'success': False, 'error': 'Failed to delete photo'})
