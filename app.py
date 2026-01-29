@@ -1,10 +1,9 @@
 """
 Windows 95 Portfolio - Flask Backend
 Interactive terminal interface for portfolio website
-WITH REAL-TIME GUESTBOOK UPDATES via Server-Sent Events (SSE)
 """
 
-from flask import Flask, request, jsonify, render_template, send_from_directory, Response
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import os
 import json
@@ -12,8 +11,7 @@ from datetime import datetime
 import uuid
 import base64
 import requests
-import queue
-import threading
+
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
@@ -29,72 +27,6 @@ def get_supabase_headers():
         'Authorization': f'Bearer {SUPABASE_KEY}',
         'Content-Type': 'application/json'
     }
-
-# ============================================================================
-# SERVER-SENT EVENTS (SSE) FOR REAL-TIME GUESTBOOK UPDATES
-# ============================================================================
-
-# Thread-safe list of client queues for SSE
-sse_clients = []
-sse_clients_lock = threading.Lock()
-
-def broadcast_guestbook_event(event_type, data):
-    """Send event to all connected SSE clients"""
-    message = f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
-    
-    with sse_clients_lock:
-        # Send to all clients, remove disconnected ones
-        disconnected = []
-        for client_queue in sse_clients:
-            try:
-                client_queue.put_nowait(message)
-            except:
-                disconnected.append(client_queue)
-        
-        # Clean up disconnected clients
-        for q in disconnected:
-            if q in sse_clients:
-                sse_clients.remove(q)
-
-def sse_stream():
-    """Generator function for SSE stream"""
-    client_queue = queue.Queue(maxsize=100)
-    
-    with sse_clients_lock:
-        sse_clients.append(client_queue)
-    
-    try:
-        # Send initial connection message
-        yield "event: connected\ndata: {\"status\": \"connected\"}\n\n"
-        
-        while True:
-            try:
-                # Wait for messages with timeout (keeps connection alive)
-                message = client_queue.get(timeout=30)
-                yield message
-            except queue.Empty:
-                # Send heartbeat to keep connection alive
-                yield ": heartbeat\n\n"
-    except GeneratorExit:
-        pass
-    finally:
-        with sse_clients_lock:
-            if client_queue in sse_clients:
-                sse_clients.remove(client_queue)
-
-@app.route('/api/guestbook/stream')
-def guestbook_stream():
-    """SSE endpoint for real-time guestbook updates"""
-    return Response(
-        sse_stream(),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no',  # Disable nginx buffering
-            'Access-Control-Allow-Origin': '*'
-        }
-    )
 
 # ============================================================================
 # VIRTUAL FILE SYSTEM - Maps to your portfolio HTML sections
@@ -475,7 +407,7 @@ def view_messages():
     return html
 
 # ============================================================================
-# GUESTBOOK API ROUTES - Visitor Photos with Supabase + REAL-TIME SSE
+# GUESTBOOK API ROUTES - Visitor Photos with Supabase
 # ============================================================================
 
 @app.route('/api/guestbook/photos', methods=['GET'])
@@ -502,7 +434,7 @@ def get_guestbook_photos():
 
 @app.route('/api/guestbook/upload', methods=['POST'])
 def upload_guestbook_photo():
-    """Upload a new guestbook photo - NOW WITH REAL-TIME BROADCAST"""
+    """Upload a new guestbook photo"""
     try:
         if not SUPABASE_URL or not SUPABASE_KEY:
             return jsonify({'success': False, 'error': 'Supabase not configured'})
@@ -542,35 +474,22 @@ def upload_guestbook_photo():
         image_url = f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{filename}'
         
         # Save photo metadata to database
-        created_at = datetime.utcnow().isoformat()
         photo_data = {
             'visitor_name': visitor_name,
             'visitor_id': visitor_id,
             'image_url': image_url,
             'filename': filename,
-            'created_at': created_at
+            'created_at': datetime.utcnow().isoformat()
         }
         
         db_response = requests.post(
             f'{SUPABASE_URL}/rest/v1/guestbook_photos',
-            headers={**get_supabase_headers(), 'Prefer': 'return=representation'},
+            headers=get_supabase_headers(),
             json=photo_data
         )
         
         if db_response.status_code in [200, 201]:
-            # Get the created photo with ID from response
-            created_photo = db_response.json()
-            if isinstance(created_photo, list) and len(created_photo) > 0:
-                created_photo = created_photo[0]
-            else:
-                created_photo = photo_data
-            
-            # ========================================
-            # BROADCAST TO ALL CONNECTED SSE CLIENTS
-            # ========================================
-            broadcast_guestbook_event('new_photo', created_photo)
-            
-            return jsonify({'success': True, 'photo': created_photo})
+            return jsonify({'success': True, 'photo': photo_data})
         else:
             return jsonify({'success': False, 'error': 'Failed to save photo metadata'})
     
@@ -579,7 +498,7 @@ def upload_guestbook_photo():
 
 @app.route('/api/guestbook/delete/<photo_id>', methods=['DELETE'])
 def delete_guestbook_photo(photo_id):
-    """Delete a guestbook photo (only by owner or admin) - NOW WITH REAL-TIME BROADCAST"""
+    """Delete a guestbook photo (only by owner or admin)"""
     try:
         if not SUPABASE_URL or not SUPABASE_KEY:
             return jsonify({'success': False, 'error': 'Supabase not configured'})
@@ -621,11 +540,6 @@ def delete_guestbook_photo(photo_id):
         )
         
         if delete_response.status_code in [200, 204]:
-            # ========================================
-            # BROADCAST DELETE TO ALL SSE CLIENTS
-            # ========================================
-            broadcast_guestbook_event('delete_photo', {'id': photo_id})
-            
             return jsonify({'success': True})
         else:
             return jsonify({'success': False, 'error': 'Failed to delete photo'})
@@ -684,7 +598,7 @@ def admin_guestbook():
                 await fetch('/api/guestbook/delete/' + id, {
                     method: 'DELETE',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ admin_key: ADMIN_KEY })
+                    body: JSON.stringify({admin_key: ADMIN_KEY})
                 });
                 loadPhotos();
             }
@@ -695,61 +609,108 @@ def admin_guestbook():
     """
     return html
 
-
-# ============================================================================
-# TERMINAL SHELL SESSION MANAGEMENT
-# ============================================================================
-
+# Session storage
 sessions = {}
 
 class PortfolioShell:
+    """Virtual shell for portfolio interaction"""
+    
     def __init__(self, session_id):
         self.session_id = session_id
-        self.current_path = '/home/sudarshan/Portfolio'
+        self.current_dir = '/home/sudarshan/Portfolio'
         self.current_fs = VIRTUAL_FS
+        self.path_stack = []
         self.history = []
-        self.username = 'sudarshan'
-        self.hostname = 'portfolio'
-        
+        self.max_history = 50
+        self.env = {
+            'USER': 'sudarshan',
+            'HOME': '/home/sudarshan/Portfolio',
+            'SHELL': '/bin/myshell',
+            'PWD': '/home/sudarshan/Portfolio'
+        }
+    
     def get_prompt(self):
-        return f'{self.current_path}$ '
+        """Get the shell prompt"""
+        return f"{self.current_dir}$ "
+    
+    def navigate_to_path(self, path):
+        """Navigate to a path and return the filesystem node"""
+        if path == '/' or path == '~' or path == self.env['HOME']:
+            return VIRTUAL_FS, []
+        
+        # Handle absolute vs relative path
+        if path.startswith('/home/sudarshan/Portfolio'):
+            parts = path.replace('/home/sudarshan/Portfolio', '').strip('/').split('/')
+        elif path.startswith('/'):
+            return None, []
+        else:
+            parts = path.strip('/').split('/')
+        
+        parts = [p for p in parts if p]  # Remove empty strings
+        
+        current = VIRTUAL_FS
+        path_stack = []
+        
+        for part in parts:
+            if part == '..':
+                if path_stack:
+                    path_stack.pop()
+                    # Navigate back
+                    current = VIRTUAL_FS
+                    for p in path_stack:
+                        current = current['contents'][p]
+            elif part == '.':
+                continue
+            elif current.get('type') == 'directory' and part in current.get('contents', {}):
+                if current['contents'][part].get('type') == 'directory':
+                    current = current['contents'][part]
+                    path_stack.append(part)
+                else:
+                    return None, []  # Trying to cd into a file
+            else:
+                return None, []
+        
+        return current, path_stack
     
     def execute(self, command):
         """Execute a shell command"""
-        self.history.append(command)
-        
-        parts = command.strip().split()
-        if not parts:
+        if not command.strip():
             return {'output': '', 'type': 'info', 'prompt': self.get_prompt()}
         
+        # Add to history
+        self.history.insert(0, command)
+        if len(self.history) > self.max_history:
+            self.history.pop()
+        
+        # Parse command
+        parts = command.strip().split()
         cmd = parts[0].lower()
         args = parts[1:] if len(parts) > 1 else []
         
         # Command mapping
         commands = {
             'help': self.cmd_help,
-            '?': self.cmd_help,
+            'pwd': self.cmd_pwd,
+            'whoami': self.cmd_whoami,
+            'cd': self.cmd_cd,
             'ls': self.cmd_ls,
             'dir': self.cmd_ls,
-            'cd': self.cmd_cd,
             'cat': self.cmd_cat,
-            'type': self.cmd_cat,
-            'pwd': self.cmd_pwd,
             'clear': self.cmd_clear,
             'cls': self.cmd_clear,
-            'tree': self.cmd_tree,
-            'open': self.cmd_open,
-            'whoami': self.cmd_whoami,
-            'hostname': self.cmd_hostname,
-            'neofetch': self.cmd_neofetch,
-            'echo': self.cmd_echo,
-            'date': self.cmd_date,
-            'time': self.cmd_time,
             'history': self.cmd_history,
             'exit': self.cmd_exit,
             'quit': self.cmd_exit,
-            'logout': self.cmd_exit,
+            'echo': self.cmd_echo,
+            'date': self.cmd_date,
+            'time': self.cmd_time,
+            'open': self.cmd_open,
+            'tree': self.cmd_tree,
+            'neofetch': self.cmd_neofetch,
+            'env': self.cmd_env,
+            'export': self.cmd_export,
             'uname': self.cmd_uname,
+            'hostname': self.cmd_hostname,
             'uptime': self.cmd_uptime,
             'man': self.cmd_man,
             'touch': self.cmd_touch,
@@ -764,118 +725,150 @@ class PortfolioShell:
         
         if cmd in commands:
             result = commands[cmd](args)
-            result['prompt'] = self.get_prompt()
-            return result
         else:
-            return {
-                'output': f"'{cmd}' is not recognized as an internal or external command.\nType 'help' for available commands.",
-                'type': 'error',
-                'prompt': self.get_prompt()
+            result = {
+                'output': f"bash: {cmd}: command not found\nType 'help' for available commands.",
+                'type': 'error'
             }
+        
+        result['prompt'] = self.get_prompt()
+        return result
     
     def cmd_help(self, args):
-        """Show available commands"""
-        help_text = '''╔══════════════════════════════════════════════════════════════╗
-║               PORTFOLIO SHELL - COMMAND HELP                  ║
-╚══════════════════════════════════════════════════════════════╝
+        """Help command"""
+        help_text = '''
+╔═══════════════════════════════════════════════════════════════════╗
+║                    MyShell - Available Commands                    ║
+╚═══════════════════════════════════════════════════════════════════╝
 
-NAVIGATION:
-  ls, dir          List directory contents
-  cd <dir>         Change directory (cd .., cd ~, cd Projects)
-  pwd              Print working directory
-  tree             Show directory tree
+ NAVIGATION:
+   pwd              Print current working directory
+   cd <dir>         Change directory (cd .., cd ~, cd Projects)
+   ls / dir         List directory contents
+   tree             Show directory tree
 
-FILE OPERATIONS:
-  cat <file>       Display file contents
-  open <file>      Open file in GUI window
-  head <file>      Show first 10 lines
-  tail <file>      Show last 10 lines
-  wc <file>        Word/line/character count
-  grep <pat> <f>   Search for pattern in file
-  find <name>      Find files matching name
+ FILE OPERATIONS:
+   cat <file>       Display file contents
+   head <file>      Show first 10 lines
+   tail <file>      Show last 10 lines
+   wc <file>        Word/line count
+   grep <str> <f>   Search in file
+   find <name>      Find files by name
+   open <file>      Open file in GUI window
 
-SYSTEM INFO:
-  whoami           Display current user
-  hostname         Display system name
-  neofetch         Display system info (fancy)
-  uname            System information
-  uptime           Show uptime
-  date             Show current date
-  time             Show current time
+ SYSTEM INFO:
+   whoami           Display current user
+   hostname         Show hostname
+   uname            System information
+   uptime           System uptime
+   neofetch         System info (fancy)
+   date             Show current date
+   time             Show current time
+   env              Show environment variables
 
-MISC:
-  echo <text>      Print text
-  history          Command history
-  clear, cls       Clear screen
-  man <cmd>        Show manual for command
-  help, ?          Show this help
-  exit, quit       Close terminal
+ UTILITIES:
+   echo <text>      Print text
+   clear / cls      Clear the screen
+   history          Show command history
+   man <cmd>        Show manual for command
+   help             Display this help message
+   exit / quit      Exit the shell
 
-TIP: Use 'open <filename>' to open files in their GUI windows!
+╔═══════════════════════════════════════════════════════════════════╗
+║  TIP: Use 'cat Bio.txt' to read files, 'ls Projects' to explore   ║
+╚═══════════════════════════════════════════════════════════════════╝
 '''
         return {'output': help_text, 'type': 'info'}
     
-    def cmd_ls(self, args):
-        """List directory contents"""
-        if self.current_fs.get('type') != 'directory':
-            return {'output': 'Not a directory', 'type': 'error'}
-        
-        contents = self.current_fs.get('contents', {})
-        if not contents:
-            return {'output': '(empty directory)', 'type': 'info'}
-        
-        output = []
-        for name, item in sorted(contents.items()):
-            if item['type'] == 'directory':
-                icon = item.get('icon', '📁')
-                output.append(f'  {icon} {name}/')
-            else:
-                icon = item.get('icon', '📄')
-                output.append(f'  {icon} {name}')
-        
-        return {'output': '\n'.join(output), 'type': 'success'}
+    def cmd_pwd(self, args):
+        """Print working directory"""
+        return {'output': self.current_dir, 'type': 'success'}
+    
+    def cmd_whoami(self, args):
+        """Display user info"""
+        output = f'''╔═══════════════════════════════════════╗
+║            USER INFORMATION           ║
+╚═══════════════════════════════════════╝
+  User:     sudarshan
+  Role:     Portfolio Owner
+  Status:   CS Student | Software Developer
+  Location: Springfield, MO
+  Shell:    /bin/myshell
+'''
+        return {'output': output, 'type': 'success'}
     
     def cmd_cd(self, args):
         """Change directory"""
-        if not args:
-            return {'output': 'Usage: cd <directory>', 'type': 'error'}
+        if not args or args[0] in ['~', '/']:
+            self.current_dir = '/home/sudarshan/Portfolio'
+            self.current_fs = VIRTUAL_FS
+            self.path_stack = []
+            return {'output': '', 'type': 'success'}
         
         target = args[0]
         
-        if target == '~' or target == '/home/sudarshan/Portfolio':
-            self.current_path = '/home/sudarshan/Portfolio'
-            self.current_fs = VIRTUAL_FS
-            return {'output': '', 'type': 'success'}
-        
         if target == '..':
-            if self.current_path != '/home/sudarshan/Portfolio':
-                path_parts = self.current_path.split('/')
-                path_parts.pop()
-                self.current_path = '/'.join(path_parts)
-                
-                # Navigate to parent in FS
-                rel_path = self.current_path.replace('/home/sudarshan/Portfolio', '').strip('/')
+            if self.path_stack:
+                self.path_stack.pop()
                 self.current_fs = VIRTUAL_FS
-                if rel_path:
-                    for part in rel_path.split('/'):
-                        if self.current_fs.get('type') == 'directory':
-                            contents = self.current_fs.get('contents', {})
-                            for name, item in contents.items():
-                                if name.lower() == part.lower():
-                                    self.current_fs = item
-                                    break
+                for p in self.path_stack:
+                    self.current_fs = self.current_fs['contents'][p]
+                self.current_dir = '/home/sudarshan/Portfolio'
+                if self.path_stack:
+                    self.current_dir += '/' + '/'.join(self.path_stack)
             return {'output': '', 'type': 'success'}
         
-        # Try to find the directory
+        # Try to navigate to target
         if self.current_fs.get('type') == 'directory':
             contents = self.current_fs.get('contents', {})
+            # Case-insensitive search
             for name, item in contents.items():
-                if name.lower() == target.lower() and item['type'] == 'directory':
+                if name.lower() == target.lower() and item.get('type') == 'directory':
+                    self.path_stack.append(name)
                     self.current_fs = item
-                    self.current_path = f'{self.current_path}/{name}'
+                    self.current_dir = '/home/sudarshan/Portfolio/' + '/'.join(self.path_stack)
                     return {'output': '', 'type': 'success'}
         
         return {'output': f"cd: {target}: No such directory", 'type': 'error'}
+    
+    def cmd_ls(self, args):
+        """List directory contents"""
+        target_fs = self.current_fs
+        
+        # If argument provided, try to list that directory
+        if args:
+            target = args[0]
+            if target_fs.get('type') == 'directory':
+                for name, item in target_fs.get('contents', {}).items():
+                    if name.lower() == target.lower():
+                        if item.get('type') == 'directory':
+                            target_fs = item
+                            break
+                        else:
+                            return {'output': f"  {item.get('icon', '📄')} {name}", 'type': 'info'}
+        
+        if target_fs.get('type') != 'directory':
+            return {'output': 'Not a directory', 'type': 'error'}
+        
+        contents = target_fs.get('contents', {})
+        if not contents:
+            return {'output': 'Directory is empty', 'type': 'info'}
+        
+        output_lines = []
+        dirs = []
+        files = []
+        
+        for name, item in sorted(contents.items()):
+            icon = item.get('icon', '📄' if item['type'] == 'file' else '📁')
+            if item['type'] == 'directory':
+                dirs.append(f"  {icon} {name}/")
+            else:
+                files.append(f"  {icon} {name}")
+        
+        output_lines.extend(dirs)
+        output_lines.extend(files)
+        
+        return {'output': '\n'.join(output_lines), 'type': 'info'}
     
     def cmd_cat(self, args):
         """Display file contents"""
@@ -887,46 +880,47 @@ TIP: Use 'open <filename>' to open files in their GUI windows!
         if self.current_fs.get('type') == 'directory':
             contents = self.current_fs.get('contents', {})
             for name, item in contents.items():
-                if name.lower() == filename.lower() and item['type'] == 'file':
-                    return {'output': item.get('content', '(empty file)'), 'type': 'success'}
+                if name.lower() == filename.lower():
+                    if item['type'] == 'directory':
+                        return {'output': f"cat: {filename}: Is a directory", 'type': 'error'}
+                    return {'output': item.get('content', ''), 'type': 'success'}
         
         return {'output': f"cat: {filename}: No such file", 'type': 'error'}
-    
-    def cmd_pwd(self, args):
-        """Print working directory"""
-        return {'output': self.current_path, 'type': 'success'}
     
     def cmd_clear(self, args):
         """Clear screen"""
         return {'output': '', 'type': 'clear'}
     
-    def cmd_tree(self, args):
-        """Show directory tree"""
-        def build_tree(node, prefix='', is_last=True):
-            lines = []
-            connector = '└── ' if is_last else '├── '
-            
-            if node.get('type') == 'directory':
-                contents = node.get('contents', {})
-                items = list(contents.items())
-                
-                for i, (name, item) in enumerate(sorted(items)):
-                    is_item_last = (i == len(items) - 1)
-                    item_connector = '└── ' if is_item_last else '├── '
-                    
-                    if item['type'] == 'directory':
-                        icon = item.get('icon', '📁')
-                        lines.append(f'{prefix}{item_connector}{icon} {name}/')
-                        extension = '    ' if is_item_last else '│   '
-                        lines.extend(build_tree(item, prefix + extension, is_item_last))
-                    else:
-                        icon = item.get('icon', '📄')
-                        lines.append(f'{prefix}{item_connector}{icon} {name}')
-            
-            return lines
+    def cmd_history(self, args):
+        """Show command history"""
+        if not self.history:
+            return {'output': 'No command history', 'type': 'info'}
         
-        tree_lines = ['📁 Portfolio/'] + build_tree(VIRTUAL_FS)
-        return {'output': '\n'.join(tree_lines), 'type': 'success'}
+        lines = ['Command History:', '─' * 40]
+        for i, cmd in enumerate(reversed(self.history[-20:]), 1):
+            lines.append(f'  {i:3d}  {cmd}')
+        
+        return {'output': '\n'.join(lines), 'type': 'info'}
+    
+    def cmd_exit(self, args):
+        """Exit shell"""
+        return {'output': 'Goodbye! 👋', 'type': 'exit'}
+    
+    def cmd_echo(self, args):
+        """Echo text"""
+        text = ' '.join(args)
+        # Handle environment variables
+        for key, value in self.env.items():
+            text = text.replace(f'${key}', value)
+        return {'output': text, 'type': 'success'}
+    
+    def cmd_date(self, args):
+        """Show date"""
+        return {'output': datetime.now().strftime('%A, %B %d, %Y'), 'type': 'success'}
+    
+    def cmd_time(self, args):
+        """Show time"""
+        return {'output': datetime.now().strftime('%H:%M:%S'), 'type': 'success'}
     
     def cmd_open(self, args):
         """Open file in GUI window"""
@@ -935,7 +929,6 @@ TIP: Use 'open <filename>' to open files in their GUI windows!
         
         filename = args[0]
         
-        # Search in current directory
         if self.current_fs.get('type') == 'directory':
             contents = self.current_fs.get('contents', {})
             for name, item in contents.items():
@@ -944,81 +937,87 @@ TIP: Use 'open <filename>' to open files in their GUI windows!
                     if window:
                         return {
                             'output': f'Opening {name}...',
-                            'type': 'open',
+                            'type': 'open_window',
                             'window': window
                         }
-                    else:
-                        return {'output': f"No GUI viewer for {name}", 'type': 'error'}
+                    return {'output': f'Cannot open {name} in GUI', 'type': 'error'}
         
         return {'output': f"open: {filename}: No such file", 'type': 'error'}
     
-    def cmd_whoami(self, args):
-        """Display current user"""
-        return {'output': self.username, 'type': 'success'}
-    
-    def cmd_hostname(self, args):
-        """Display hostname"""
-        return {'output': self.hostname, 'type': 'success'}
+    def cmd_tree(self, args):
+        """Show directory tree"""
+        def build_tree(node, prefix='', is_last=True):
+            lines = []
+            contents = node.get('contents', {})
+            items = list(contents.items())
+            
+            for i, (name, item) in enumerate(items):
+                is_last_item = (i == len(items) - 1)
+                connector = '└── ' if is_last_item else '├── '
+                icon = item.get('icon', '📁' if item['type'] == 'directory' else '📄')
+                
+                lines.append(f"{prefix}{connector}{icon} {name}")
+                
+                if item['type'] == 'directory':
+                    extension = '    ' if is_last_item else '│   '
+                    lines.extend(build_tree(item, prefix + extension, is_last_item))
+            
+            return lines
+        
+        tree_lines = ['📁 Portfolio', '│']
+        tree_lines.extend(build_tree(VIRTUAL_FS))
+        
+        return {'output': '\n'.join(tree_lines), 'type': 'info'}
     
     def cmd_neofetch(self, args):
-        """Display fancy system info"""
-        neofetch = '''
-        ██╗    ██╗██╗███╗   ██╗ █████╗ ███████╗
-        ██║    ██║██║████╗  ██║██╔══██╗██╔════╝
-        ██║ █╗ ██║██║██╔██╗ ██║╚██████║███████╗
-        ██║███╗██║██║██║╚██╗██║ ╚═══██║╚════██║
-        ╚███╔███╔╝██║██║ ╚████║ █████╔╝███████║
-         ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝ ╚════╝ ╚══════╝
-        ──────────────────────────────────────────
-        OS:        Portfolio OS 95
-        Host:      sudarshantwry.org
-        Kernel:    Flask 2.0
-        Uptime:    Since Jan 2023
-        Shell:     PortfolioShell v1.0
-        Theme:     Windows 95 Classic
-        Terminal:  Web Terminal
-        CPU:       JavaScript V8
-        Memory:    LocalStorage
-        ──────────────────────────────────────────
-        User:      Sudarshan Tiwari
-        Role:      CS Student & Developer
-        Location:  Springfield, MO
-        Status:    Open to Opportunities!
+        """System info fancy display"""
+        output = '''
+                   _,met$$$$$gg.          sudarshan@portfolio
+                ,g$$$$$$$$$$$$$$$P.       ──────────────────────
+              ,g$$P"     """Y$$.".        OS: Windows 95 Portfolio Edition
+             ,$$P'              `$$$.     Host: Sudarshan Tiwari
+            ',$$P       ,ggs.     `$$b:   Kernel: Tiwari Custom Kernel
+            `d$$'     ,$P"'   .    $$$    Uptime: Since NOV 2025
+             $$P      d$'     ,    $$P    Shell: MyShell 1.0
+             $$:      $$.   -    ,d$$'    Terminal: Win95 Terminal
+             $$;      Y$b._   _,d$P'      CPU: Ryzen 7 4800h
+             Y$$.    `.`"Y$$$$P"'         Memory: 1337MB / ∞MB
+             `$$b      "-.__              Disk: AWS
+              `Y$$                        
+               `Y$$.                      LANGUAGES: JS, Python, C/C++, PHP
+                 `$$b.                    FRAMEWORKS: React, Flask, Angular
+                   `Y$$b.                 TOOLS: Git, Docker, Linux
+                     `"Y$b._              
+                        `"""              ████████████████████████████
+
 '''
-        return {'output': neofetch, 'type': 'success'}
+        return {'output': output, 'type': 'success'}
     
-    def cmd_echo(self, args):
-        """Echo text"""
-        return {'output': ' '.join(args) if args else '', 'type': 'success'}
+    def cmd_env(self, args):
+        """Show environment variables"""
+        lines = ['Environment Variables:', '─' * 40]
+        for key, value in self.env.items():
+            lines.append(f'  {key}={value}')
+        return {'output': '\n'.join(lines), 'type': 'info'}
     
-    def cmd_date(self, args):
-        """Show current date"""
-        from datetime import datetime
-        return {'output': datetime.now().strftime('%A, %B %d, %Y'), 'type': 'success'}
-    
-    def cmd_time(self, args):
-        """Show current time"""
-        from datetime import datetime
-        return {'output': datetime.now().strftime('%I:%M:%S %p'), 'type': 'success'}
-    
-    def cmd_history(self, args):
-        """Show command history"""
-        if not self.history:
-            return {'output': '(no history)', 'type': 'info'}
+    def cmd_export(self, args):
+        """Set environment variable"""
+        if not args or '=' not in args[0]:
+            return {'output': 'Usage: export VAR=value', 'type': 'error'}
         
-        output = []
-        for i, cmd in enumerate(self.history[-20:], 1):
-            output.append(f'  {i}  {cmd}')
-        
-        return {'output': '\n'.join(output), 'type': 'success'}
-    
-    def cmd_exit(self, args):
-        """Exit terminal"""
-        return {'output': 'Goodbye! 👋', 'type': 'exit'}
+        key, value = args[0].split('=', 1)
+        self.env[key] = value
+        return {'output': '', 'type': 'success'}
     
     def cmd_uname(self, args):
         """System information"""
-        return {'output': 'PortfolioOS 95 x86_64 Flask/2.0', 'type': 'success'}
+        if args and '-a' in args:
+            return {'output': 'Windows95 Portfolio 1.0 sudarshan-pc x86_64 MyShell', 'type': 'success'}
+        return {'output': 'Windows95 Portfolio', 'type': 'success'}
+    
+    def cmd_hostname(self, args):
+        """Show hostname"""
+        return {'output': 'sudarshan-portfolio', 'type': 'success'}
     
     def cmd_uptime(self, args):
         """Show uptime"""
@@ -1085,7 +1084,7 @@ TIP: Use 'open <filename>' to open files in their GUI windows!
     def cmd_find(self, args):
         """Find files"""
         if not args:
-            return {'output': 'Usage: find <n>', 'type': 'error'}
+            return {'output': 'Usage: find <name>', 'type': 'error'}
         
         pattern = args[0].lower()
         results = []
@@ -1237,7 +1236,6 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     print("=" * 60)
     print("  Windows 95 Portfolio Shell Server")
-    print("  WITH REAL-TIME GUESTBOOK SSE SUPPORT")
     print(f"  Starting on port {port}")
     print("=" * 60)
-    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=port, debug=False)  # ← KEY CHANGE
