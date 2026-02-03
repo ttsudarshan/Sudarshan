@@ -412,16 +412,27 @@ def view_messages():
 
 @app.route('/api/guestbook/photos', methods=['GET'])
 def get_guestbook_photos():
-    """Get all guestbook photos from Supabase"""
+    """Get guestbook photos from Supabase - supports 'since' parameter for polling"""
     try:
         if not SUPABASE_URL or not SUPABASE_KEY:
             return jsonify({'success': False, 'error': 'Supabase not configured', 'photos': []})
         
-        # Query Supabase for photos
-        response = requests.get(
-            f'{SUPABASE_URL}/rest/v1/guestbook_photos?select=*&order=created_at.desc',
-            headers=get_supabase_headers()
-        )
+        # Check for 'since' parameter (ISO timestamp) for polling
+        since = request.args.get('since')
+        limit = request.args.get('limit', type=int)
+        
+        # Build query URL
+        query_url = f'{SUPABASE_URL}/rest/v1/guestbook_photos?select=*&order=created_at.desc'
+        
+        # If 'since' provided, only get photos newer than that timestamp
+        if since:
+            query_url += f'&created_at=gt.{since}'
+        
+        # If limit provided, limit results
+        if limit:
+            query_url += f'&limit={limit}'
+        
+        response = requests.get(query_url, headers=get_supabase_headers())
         
         if response.status_code == 200:
             photos = response.json()
