@@ -1,9 +1,8 @@
-// ========== REAL-TIME GUESTBOOK - SIMPLE POLLING VERSION ==========
-// This is FASTER and more reliable than SSE for most hosting platforms
-// Add this to your script.js file
+// ========== REAL-TIME GUESTBOOK POLLING ==========
+// Add this to your script.js or include as separate file
 
 (function() {
-  let lastPhotoTimestamp = null;
+  let lastCheckTime = null;
   let pollInterval = null;
   const POLL_INTERVAL_MS = 3000; // Check every 3 seconds
   
@@ -11,17 +10,22 @@
    * Initialize polling for guestbook updates
    */
   function initGuestbookPolling() {
-      // Get initial timestamp from existing photos
-      updateLastTimestamp();
+      console.log('🔄 Initializing guestbook polling...');
+      
+      // Get the most recent photo timestamp from server on init
+      fetchLatestTimestamp();
       
       // Start polling
       pollInterval = setInterval(checkForNewPhotos, POLL_INTERVAL_MS);
       
-      // Stop polling when page is hidden, resume when visible
+      // Pause polling when tab is hidden, resume when visible
       document.addEventListener('visibilitychange', () => {
           if (document.hidden) {
+              console.log('Tab hidden - pausing guestbook polling');
               clearInterval(pollInterval);
           } else {
+              console.log('Tab visible - resuming guestbook polling');
+              fetchLatestTimestamp(); // Refresh timestamp
               pollInterval = setInterval(checkForNewPhotos, POLL_INTERVAL_MS);
           }
       });
@@ -30,15 +34,24 @@
   }
   
   /**
-   * Update the last known photo timestamp
+   * Fetch the latest photo timestamp from server
    */
-  function updateLastTimestamp() {
-      const guestbookGrid = document.getElementById('gallery-guestbook-grid');
-      if (!guestbookGrid) return;
-      
-      const firstPhoto = guestbookGrid.querySelector('.guestbook-item');
-      if (firstPhoto && firstPhoto.dataset.timestamp) {
-          lastPhotoTimestamp = firstPhoto.dataset.timestamp;
+  async function fetchLatestTimestamp() {
+      try {
+          const response = await fetch('/api/guestbook/photos?limit=1');
+          const data = await response.json();
+          
+          if (data.success && data.photos && data.photos.length > 0) {
+              lastCheckTime = data.photos[0].created_at;
+              console.log('📌 Last photo timestamp:', lastCheckTime);
+          } else {
+              // No photos yet, use current time
+              lastCheckTime = new Date().toISOString();
+              console.log('📌 No photos yet, using current time');
+          }
+      } catch (err) {
+          console.log('Failed to fetch latest timestamp:', err);
+          lastCheckTime = new Date().toISOString();
       }
   }
   
@@ -46,42 +59,47 @@
    * Check for new photos since last check
    */
   async function checkForNewPhotos() {
+      if (!lastCheckTime) {
+          console.log('No lastCheckTime set, skipping poll');
+          return;
+      }
+      
       try {
-          const url = lastPhotoTimestamp 
-              ? `/api/guestbook/photos?since=${encodeURIComponent(lastPhotoTimestamp)}`
-              : '/api/guestbook/photos?limit=1';
-          
+          const url = `/api/guestbook/photos?since=${encodeURIComponent(lastCheckTime)}`;
           const response = await fetch(url);
           const data = await response.json();
           
           if (data.success && data.photos && data.photos.length > 0) {
-              // Check if we have genuinely new photos
+              console.log(`📸 Found ${data.photos.length} new photo(s)!`);
+              
               const visitorId = window.visitorId || localStorage.getItem('guestbook_visitor_id');
               
-              for (const photo of data.photos) {
-                  // Skip if this photo already exists in DOM
+              // Process photos in reverse order (oldest first) so newest ends up on top
+              const photosToAdd = [...data.photos].reverse();
+              
+              for (const photo of photosToAdd) {
+                  // Skip if already in DOM
                   const guestbookGrid = document.getElementById('gallery-guestbook-grid');
                   if (guestbookGrid && guestbookGrid.querySelector(`[data-id="${photo.id}"]`)) {
+                      console.log('Photo already exists, skipping:', photo.id);
                       continue;
                   }
                   
-                  // Add new photo
+                  // Add to guestbook
                   addPhotoToGuestbook(photo);
                   
-                  // Show notification if not own photo
+                  // Show notification for other people's photos
                   if (photo.visitor_id !== visitorId) {
                       showNewPhotoNotification(photo);
                   }
               }
               
-              // Update timestamp
-              if (data.photos[0]) {
-                  lastPhotoTimestamp = data.photos[0].created_at;
-              }
+              // Update timestamp to the newest photo
+              lastCheckTime = data.photos[0].created_at;
+              console.log('📌 Updated lastCheckTime:', lastCheckTime);
           }
       } catch (err) {
-          // Silent fail - will retry on next interval
-          console.log('Poll check failed, will retry...');
+          console.log('Poll check failed:', err);
       }
   }
   
@@ -90,15 +108,15 @@
    */
   function addPhotoToGuestbook(photo) {
       const guestbookGrid = document.getElementById('gallery-guestbook-grid');
-      if (!guestbookGrid) return;
+      if (!guestbookGrid) {
+          console.log('Guestbook grid not found');
+          return;
+      }
       
       const visitorId = window.visitorId || localStorage.getItem('guestbook_visitor_id');
       const isOwnPhoto = photo.visitor_id === visitorId;
       
-      // Check if photo already exists
-      if (guestbookGrid.querySelector(`[data-id="${photo.id}"]`)) {
-          return;
-      }
+      console.log('Adding photo to guestbook:', photo.visitor_name);
       
       // Remove empty state if present
       const emptyState = guestbookGrid.querySelector('.guestbook-empty');
@@ -113,7 +131,6 @@
       photoEl.dataset.visitor = photo.visitor_id;
       photoEl.dataset.url = photo.image_url;
       photoEl.dataset.name = photo.visitor_name;
-      photoEl.dataset.timestamp = photo.created_at;
       
       photoEl.innerHTML = `
           <img src="${photo.image_url}" alt="${photo.visitor_name}" loading="lazy">
@@ -121,21 +138,29 @@
           <div class="guestbook-item-date">${new Date(photo.created_at).toLocaleDateString()}</div>
       `;
       
-      // Add click handler
+      // Add click handler for preview
       photoEl.addEventListener('click', () => {
           openGuestbookPreview(photo, isOwnPhoto);
       });
       
-      // Insert after header
+      // Insert after header (at the top of photos)
       const header = guestbookGrid.querySelector('.guestbook-header');
       if (header && header.nextSibling) {
           guestbookGrid.insertBefore(photoEl, header.nextSibling);
+      } else if (header) {
+          header.after(photoEl);
       } else {
           guestbookGrid.prepend(photoEl);
       }
       
-      // Animate
-      photoEl.style.animation = 'photoFadeIn 0.4s ease-out';
+      // Add animation
+      photoEl.style.opacity = '0';
+      photoEl.style.transform = 'scale(0.8)';
+      requestAnimationFrame(() => {
+          photoEl.style.transition = 'opacity 0.3s, transform 0.3s';
+          photoEl.style.opacity = '1';
+          photoEl.style.transform = 'scale(1)';
+      });
       
       // Update count
       const countEl = document.getElementById('guestbook-count');
@@ -151,19 +176,27 @@
       const preview = document.getElementById('gallery-preview');
       const previewContent = document.getElementById('gallery-preview-content');
       const previewTitle = document.getElementById('preview-title');
+      const previewWallpaperBtn = document.getElementById('preview-wallpaper-btn');
+      const previewDownloadBtn = document.getElementById('preview-download-btn');
       const previewDeleteBtn = document.getElementById('preview-delete-btn');
       
       if (!preview || !previewContent) return;
       
-      previewTitle.textContent = `${photo.visitor_name} - ${new Date(photo.created_at).toLocaleDateString()}`;
+      const date = new Date(photo.created_at).toLocaleDateString();
+      previewTitle.textContent = `${photo.visitor_name} - ${date}`;
       previewContent.innerHTML = `<img src="${photo.image_url}" alt="${photo.visitor_name}">`;
+      
+      if (previewWallpaperBtn) previewWallpaperBtn.style.display = 'inline-block';
+      if (previewDownloadBtn) previewDownloadBtn.style.display = 'inline-block';
       
       if (previewDeleteBtn) {
           previewDeleteBtn.style.display = isOwnPhoto ? 'inline-block' : 'none';
+          previewDeleteBtn.textContent = '🗑️ Delete';
       }
       
       preview.style.display = 'block';
       
+      // Store for actions
       window.currentPreviewItem = {
           data: photo.image_url,
           visitor_name: photo.visitor_name,
@@ -174,19 +207,21 @@
   }
   
   /**
-   * Show notification toast
+   * Show notification when someone else adds a photo
    */
   function showNewPhotoNotification(photo) {
-      // Don't show if on guestbook tab
+      // Don't show if guestbook tab is active
       const guestbookTab = document.querySelector('[data-tab="guestbook"]');
-      if (guestbookTab && guestbookTab.classList.contains('active')) return;
+      if (guestbookTab && guestbookTab.classList.contains('active')) {
+          return;
+      }
       
       // Create notification
       const notification = document.createElement('div');
+      notification.className = 'guestbook-notification';
       notification.innerHTML = `
-          <span>📸</span>
-          <span><strong>${photo.visitor_name}</strong> added a photo!</span>
-          <button onclick="this.parentElement.remove()">✕</button>
+          📸 <strong>${photo.visitor_name}</strong> added a photo!
+          <span style="margin-left:10px;cursor:pointer" onclick="this.parentElement.remove()">✕</span>
       `;
       notification.style.cssText = `
           position: fixed;
@@ -194,54 +229,60 @@
           right: 20px;
           background: #000080;
           color: white;
-          padding: 10px 14px;
+          padding: 12px 16px;
           border: 2px outset #ccc;
           font-family: 'MS Sans Serif', Arial, sans-serif;
           font-size: 12px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
           z-index: 9999;
           cursor: pointer;
+          box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
       `;
       
+      // Click to view guestbook
       notification.addEventListener('click', (e) => {
-          if (e.target.tagName !== 'BUTTON') {
-              // Switch to guestbook
-              document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
-              if (guestbookTab) guestbookTab.classList.add('active');
-              document.getElementById('gallery-photos-grid').style.display = 'none';
-              document.getElementById('gallery-videos-grid').style.display = 'none';
-              document.getElementById('gallery-guestbook-grid').style.display = 'grid';
-              
+          if (e.target.tagName !== 'SPAN') {
+              // Open gallery window
               const galleryWindow = document.getElementById('gallery-window');
-              if (galleryWindow) galleryWindow.classList.add('active');
+              if (galleryWindow) {
+                  galleryWindow.classList.add('active');
+                  if (typeof bringToFront === 'function') bringToFront(galleryWindow);
+                  if (typeof updateTaskbar === 'function') updateTaskbar();
+              }
+              
+              // Switch to guestbook tab
+              document.querySelectorAll('.gallery-tab').forEach(t => t.classList.remove('active'));
+              const guestbookTab = document.querySelector('[data-tab="guestbook"]');
+              if (guestbookTab) guestbookTab.classList.add('active');
+              
+              const photosGrid = document.getElementById('gallery-photos-grid');
+              const videosGrid = document.getElementById('gallery-videos-grid');
+              const guestbookGrid = document.getElementById('gallery-guestbook-grid');
+              
+              if (photosGrid) photosGrid.style.display = 'none';
+              if (videosGrid) videosGrid.style.display = 'none';
+              if (guestbookGrid) guestbookGrid.style.display = 'grid';
               
               notification.remove();
           }
       });
       
       document.body.appendChild(notification);
-      setTimeout(() => notification.remove(), 5000);
-  }
-  
-  // Add animation styles
-  if (!document.getElementById('guestbook-poll-styles')) {
-      const style = document.createElement('style');
-      style.id = 'guestbook-poll-styles';
-      style.textContent = `
-          @keyframes photoFadeIn {
-              from { opacity: 0; transform: scale(0.9); }
-              to { opacity: 1; transform: scale(1); }
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+          if (notification.parentElement) {
+              notification.style.transition = 'opacity 0.3s';
+              notification.style.opacity = '0';
+              setTimeout(() => notification.remove(), 300);
           }
-      `;
-      document.head.appendChild(style);
+      }, 5000);
   }
   
-  // Start polling when DOM ready
+  // Start when DOM is ready
   if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initGuestbookPolling);
   } else {
-      initGuestbookPolling();
+      // Small delay to let the page load guestbook first
+      setTimeout(initGuestbookPolling, 1000);
   }
 })();
