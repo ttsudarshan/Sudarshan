@@ -101,6 +101,58 @@
       } catch (err) {
           console.log('Poll check failed:', err);
       }
+      
+      // Also check for deletions
+      checkForDeletedPhotos();
+  }
+  
+  /**
+   * Check if any photos were deleted and remove them from DOM
+   */
+  async function checkForDeletedPhotos() {
+      try {
+          const guestbookGrid = document.getElementById('gallery-guestbook-grid');
+          if (!guestbookGrid) return;
+          
+          // Get all photo IDs currently in DOM
+          const domPhotos = guestbookGrid.querySelectorAll('.guestbook-item[data-id]');
+          if (domPhotos.length === 0) return;
+          
+          // Fetch all current photos from server
+          const response = await fetch('/api/guestbook/photos');
+          const data = await response.json();
+          
+          if (!data.success) return;
+          
+          // Create set of server photo IDs
+          const serverPhotoIds = new Set(data.photos.map(p => String(p.id)));
+          
+          // Check each DOM photo
+          domPhotos.forEach(photoEl => {
+              const photoId = photoEl.dataset.id;
+              if (photoId && !serverPhotoIds.has(photoId)) {
+                  console.log('🗑️ Photo deleted, removing from view:', photoId);
+                  
+                  // Animate out
+                  photoEl.style.transition = 'opacity 0.3s, transform 0.3s';
+                  photoEl.style.opacity = '0';
+                  photoEl.style.transform = 'scale(0.8)';
+                  
+                  setTimeout(() => {
+                      photoEl.remove();
+                      
+                      // Update count
+                      const countEl = document.getElementById('guestbook-count');
+                      if (countEl) {
+                          const current = parseInt(countEl.textContent || 0);
+                          countEl.textContent = Math.max(0, current - 1);
+                      }
+                  }, 300);
+              }
+          });
+      } catch (err) {
+          // Silent fail
+      }
   }
   
   /**
