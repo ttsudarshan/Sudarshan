@@ -106,12 +106,12 @@
               <h2>Professional Experience</h2>
               <p><strong>Software Developer Intern</strong> - TuningSQL (Aug 2025 - Present)</p>
               <ul>
-                  <li>Architected a full-stack web content transformation platform using PostgreSQL, PHP, JavaScript, and Backbone.js,
-                    designing relational database schema and implementing backend/frontend integration</li>
-                  <li>Developed PHP backend endpoints for HTML DOM transformation using DOMDocument and XPath, integrating
-                    external tools and implementing complete URL-to-transformation pipeline with comprehensive error handling</li>
-                  <li>Built Backbone.js frontend with real-time form validation, modal workflows, and asynchronous AJAX operations,
-                    enabling users to create and apply customizable content lenses with instant visual feedbacks</li>
+                  <li>Built a C\#, ASP.NET Core REST API backed by PostgreSQL that takes any public web page, strips out the ads and clutter, 
+                    and rebuilds it as a clean saved view, so a customer could reuse pages the company's existing tooling could not read.</li>
+                  <li>Wrote the front end in React, JavaScript, TypeScript, HTML, and CSS so a customer could set up their own page layout through 
+                    simple forms and see the result appear instantly, instead of waiting days for a developer to build it for them</li>
+                  <li>Shipped every change through Git pull requests, GitHub code review, and two-week Agile sprints with product 
+                    and QA staff, reworking my code on senior engineer feedback.</li>
               </ul>
               <p><strong>Research Assistant</strong> - Missouri State University (May 2024 - Present)</p>
               <ul>
@@ -161,6 +161,27 @@
             </div>
         </div>
         <div class="window-body">
+            <div class="project-card">
+                <h3>📈 TickerDesk — Stock Tracking Web App</h3>
+                <p><strong>Tech Stack:</strong> C#, ASP.NET Core, SQL Server, Entity Framework Core, Angular, TypeScript, Redis, Docker, GitHub Actions, Azure, xUnit</p>
+                <p>Built a stock tracking site modeling companies, quotes, and watchlists as object-oriented classes mapped to tables through EF Core, so a user can look up any company's share price and save it to a personal watchlist. The Angular front end refreshes prices on screen by themselves every few seconds, letting a user watch a whole list of stocks move without reloading the page. Designed the RESTful API and a Redis cache behind a service interface supplied by dependency injection, so everyone watching the same company shares one price lookup and the feed can be swapped for a fake one in tests. Containerized with Docker and shipped through a GitHub Actions CI/CD pipeline that tests and deploys to Azure.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
+            <div class="project-card">
+                <h3>✍️ Conduit .NET — Blogging &amp; Social Publishing Platform</h3>
+                <p><strong>Tech Stack:</strong> C#, ASP.NET Core, Entity Framework Core, PostgreSQL, JWT, LINQ</p>
+                <p>Built a publishing site where writers post articles, readers comment on and favorite them, and each reader follows the writers they like and sees a feed of only those writers. Added JWT sign-in with hashed passwords and policy-based authorization so a writer can edit or delete only their own articles, then ran the public specification's own test suite against my version and passed every test. Rewrote the LINQ behind the feed and article endpoints so a page that used to make dozens of small SQL calls now makes one, keeping a reader's feed fast no matter how many writers they follow.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
+            <div class="project-card">
+                <h3>⚙️ TaskForge — Background Job Service</h3>
+                <p><strong>Tech Stack:</strong> .NET Core, RabbitMQ, MediatR, FluentValidation, Serilog, PostgreSQL, xUnit, Moq, Azure DevOps</p>
+                <p>Built a job service as a web API plus worker microservices passing work over a RabbitMQ queue, so a user who requests a large PDF report, an email batch, or processed images gets a confirmation right away while the work runs in the background. Handled all three job types through MediatR with FluentValidation checks, keeping validation and logging in one shared place instead of copied into each worker, so a fourth kind of job is added without rewriting the same checks. Added Serilog logging, health check endpoints, and xUnit/Moq tests alongside PostgreSQL integration tests run automatically in the pipeline, so a job that fails overnight is traced from the first request to the worker that dropped it.</p>
+                <button class="button-95">View Project</button>
+            </div>
+
             <div class="project-card">
                 <h3>💬 Social Media Web App</h3>
                 <p><strong>Tech Stack:</strong> C#, Angular, SignalR, SQL Server, OAuth 2.0, JWT</p>
