@@ -251,7 +251,7 @@ I'm actively seeking internship opportunities!
 Feel free to reach out for collaborations or opportunities.
 '''
         },
-        'CV.pdf': {
+        'Resume': {
             'type': 'file',
             'icon': '📋',
             'window': 'cv',
@@ -260,7 +260,7 @@ Feel free to reach out for collaborations or opportunities.
 Resume available for download at:
 https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf
 
-Type 'open CV.pdf' to view in PDF viewer window.
+Type 'open Resume' to view in PDF viewer window.
 ══════════════════════════════════════════════════════════════════
 '''
         }
