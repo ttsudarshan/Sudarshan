@@ -52,12 +52,12 @@ EDUCATION:
 ──────────────────────────────────────────────────────────────────
   Missouri State University - Springfield, Missouri
   Bachelor of Science in Computer Science
-  Jan 2023 - Dec 2026 (Expected)
+  Jan 2023 - Dec 2026
 
 EXPERIENCE:
 ──────────────────────────────────────────────────────────────────
   ► Software Developer Intern - TuningSQL (Aug 2025 - Present)
-    • Full-stack web platform (PostgreSQL, PHP, JavaScript, Backbone.js)
+    • Full-stack web platform (PostgreSQL, PHP, JavaScript, Backbone.js, Angular)
     • PHP backend endpoints for HTML DOM transformation
     • Real-time validation and AJAX operations
 
@@ -68,13 +68,13 @@ EXPERIENCE:
 
 SPECIALIZATIONS:
 ──────────────────────────────────────────────────────────────────
-  • Full-Stack Development (React, Node.js, Angular, Django)
+  • Full-Stack Development (React, Node.js, Angular, .Net)
   • Linux Kernel & System Programming (C/C++)
   • Cloud Architecture (Azure, Docker, Heroku)
   • Real-Time Systems (SignalR, WebSocket)
   • Database Design (MongoDB, PostgreSQL, SQL Server)
 
-STATUS: Open to internship opportunities!
+STATUS: Hunting new Grad roles!
 '''
         },
         'Projects': {
