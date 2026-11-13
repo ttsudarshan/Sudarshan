@@ -151,9 +151,9 @@ Features:
   • Content management system
 '''
                 },
-                'TickerDesk.md': {
+                'MarketPredictor.md': {
                     'type': 'file',
-                    'content': '''📈 TICKERDESK — STOCK TRACKING WEB APP
+                    'content': '''📈 MARKET-PREDICTOR — STOCK TRACKING WEB APP
 ═══════════════════════════════════════════════════════════════
 Tech Stack: C#, ASP.NET Core, SQL Server, Entity Framework Core,
             Angular, TypeScript, Redis, Docker, GitHub Actions,
