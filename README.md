@@ -61,10 +61,10 @@ The terminal navigates a virtual file system that maps to your portfolio:
 │   ├── PlacementTracker.md
 │   ├── CustomShell.md
 │   └── TuningSQL.md
-├── Skills.doc       → Opens Skills window
-├── Honors.txt       → Opens Honors window
-├── Contact.txt      → Opens Contact window
-└── CV.pdf           → Opens CV window
+├── Skills.doc       → Opens Skills window icon
+├── Honors.txt       → Opens Honors window icon
+├── Contact.txt      → Opens Contact window icon
+└── Resume           → Opens Resume window icon
 ```
 
 ## 💡 Example Terminal Session
@@ -76,7 +76,7 @@ The terminal navigates a virtual file system that maps to your portfolio:
   📄 Skills.doc
   🏆 Honors.txt
   ✉️ Contact.txt
-  📋 CV.pdf
+  📋 Resume
 
 /home/sudarshan/Portfolio$ cat Bio.txt
 [Shows your bio content]
