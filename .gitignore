@@ -1,0 +1,15 @@
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Secrets and local config
+.env
+
+# Virtual environments
+venv/
+.venv/
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
