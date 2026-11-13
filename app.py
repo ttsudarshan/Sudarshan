@@ -151,6 +151,87 @@ Features:
   • Content management system
 '''
                 },
+                'TickerDesk.md': {
+                    'type': 'file',
+                    'content': '''📈 TICKERDESK — STOCK TRACKING WEB APP
+═══════════════════════════════════════════════════════════════
+Tech Stack: C#, ASP.NET Core, SQL Server, Entity Framework Core,
+            Angular, TypeScript, Redis, Docker, GitHub Actions,
+            Azure, xUnit
+
+Description:
+Stock tracking app where users look up share prices and build
+personal watchlists that refresh live in an Angular front end.
+REST API built on EF Core with a Redis cache behind an injected
+service interface, containerized and deployed to Azure via CI/CD.
+
+Features:
+  • Live-refreshing personal watchlists
+  • Redis caching for repeated price lookups
+  • Mockable price feed for unit testing
+  • Dockerized, auto-deployed to Azure via GitHub Actions
+'''
+                },
+                'ConduitNET.md': {
+                    'type': 'file',
+                    'content': '''✍️ CONDUIT .NET — BLOGGING & SOCIAL PUBLISHING PLATFORM
+═══════════════════════════════════════════════════════════════
+Tech Stack: C#, ASP.NET Core, Entity Framework Core, PostgreSQL,
+            JWT, LINQ
+
+Description:
+Blogging platform with articles, comments, favorites, and a
+personalized follow feed. Passes the full public Conduit API
+spec test suite, with feed queries optimized for scale.
+
+Features:
+  • Articles, comments, favorites, and follow feed
+  • JWT auth with hashed passwords
+  • Policy-based authorization (authors edit only their posts)
+  • Feed LINQ rewritten to collapse dozens of queries into one
+  • 100% Conduit API spec test pass rate
+'''
+                },
+                'TaskForge.md': {
+                    'type': 'file',
+                    'content': '''⚙️ TASKFORGE — BACKGROUND JOB SERVICE
+═══════════════════════════════════════════════════════════════
+Tech Stack: .NET Core, RabbitMQ, MediatR, FluentValidation,
+            Serilog, PostgreSQL, xUnit, Moq, Azure DevOps
+
+Description:
+Background job system built as a web API plus worker
+microservices communicating over RabbitMQ. Long tasks return
+instantly and finish off-thread, with every job type routed
+through a shared MediatR pipeline.
+
+Features:
+  • Async processing for PDF reports, email batches, images
+  • RabbitMQ-based worker microservices
+  • Pluggable job types via MediatR + FluentValidation
+  • Structured Serilog logging and health check endpoints
+  • xUnit/Moq unit tests + PostgreSQL integration tests in CI
+'''
+                },
+                'SystemMonitor.md': {
+                    'type': 'file',
+                    'content': '''📟 LINUX SYSTEM MONITOR
+═══════════════════════════════════════════════════════════════
+Tech Stack: C++, Qt6, SQLite, X11, Intel RAPL, Linux
+
+Description:
+Desktop system monitor for Linux with a background daemon
+(sysmon-tracker) that logs app usage and power data to SQLite,
+paired with a Qt6 GUI for browsing stats and trends.
+
+Features:
+  • Per-app screen time tracking via X11 _NET_WM_NAME
+  • Tab-level browser usage breakdown
+  • Battery & power monitoring via Intel RAPL
+  • Idle detection using display blanking state
+  • Persistent history stored in SQLite
+'''
+                },
                 'Win95Portfolio.md': {
                     'type': 'file',
                     'content': '''💻 WINDOWS 95 PORTFOLIO (You're Here!)
