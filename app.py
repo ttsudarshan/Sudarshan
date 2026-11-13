@@ -160,16 +160,23 @@ Tech Stack: C#, ASP.NET Core, SQL Server, Entity Framework Core,
             Azure, xUnit
 
 Description:
-Stock tracking app where users look up share prices and build
-personal watchlists that refresh live in an Angular front end.
-REST API built on EF Core with a Redis cache behind an injected
-service interface, containerized and deployed to Azure via CI/CD.
+Market intelligence platform that turns hours of finance YouTube
+into signals you can check. It automatically pulls new uploads
+from followed creators, extracts transcripts, and uses an LLM
+with RAG to pull out stock calls and price predictions. Each
+claim is then tracked against real market data to score and rank
+creators by accuracy. It also works as a live stock tracker with
+watchlists and paper trading.
 
 Features:
-  • Live-refreshing personal watchlists
-  • Redis caching for repeated price lookups
-  • Mockable price feed for unit testing
-  • Dockerized, auto-deployed to Azure via GitHub Actions
+  • Paste a channel link → auto-ingest its latest 30–60 videos
+  • Auto-pulls new uploads from followed channels
+  • LLM + RAG extraction of stock claims and predictions
+  • Prediction accuracy tracking against real prices
+  • Creator leaderboard ranked by prediction track record
+  • Market heads-up summaries across all followed creators
+  • Rolling 3-month video window; claim history kept for scoring
+  • Live prices, watchlists, and paper trading
 '''
                 },
                 'ConduitNET.md': {
