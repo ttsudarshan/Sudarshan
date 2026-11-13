@@ -35,7 +35,7 @@ def get_supabase_headers():
 VIRTUAL_FS = {
     'type': 'directory',
     'contents': {
-        'Bio.txt': {
+        'CV.txt': {
             'type': 'file',
             'icon': '💻',
             'window': 'about',
@@ -786,7 +786,7 @@ class PortfolioShell:
    exit / quit      Exit the shell
 
 ╔═══════════════════════════════════════════════════════════════════╗
-║  TIP: Use 'cat Bio.txt' to read files, 'ls Projects' to explore   ║
+║  TIP: Use 'cat CV.txt' to read files, 'ls Projects' to explore   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 '''
         return {'output': help_text, 'type': 'info'}
