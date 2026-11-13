@@ -753,6 +753,7 @@ class PortfolioShell:
 ╚═══════════════════════════════════════════════════════════════════╝
 
  NAVIGATION:
+ You can use 'Tab' button to auto complete your commands 
    pwd              Print current working directory
    cd <dir>         Change directory (cd .., cd ~, cd Projects)
    ls / dir         List directory contents
