@@ -371,14 +371,14 @@
         </div>
         <div class="window-body cv-body">
             <div class="pdf-toolbar">
-                <button class="button-95" onclick="window.open('https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf', '_blank')">📄 Download PDF</button>
+                <button class="button-95" onclick="window.open('/resume.pdf?download=1', '_blank')">📄 Download PDF</button>
                 <button class="button-95" onclick="document.getElementById('cv-iframe').contentWindow.print()">🖨️ Print</button>
                 <button class="button-95" id="cv-refresh-btn">🔄 Refresh</button>
             </div>
             <div class="pdf-container">
                 <iframe 
                     id="cv-iframe"
-                    src="https://docs.google.com/viewer?url=https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf&embedded=true" 
+                    src="/resume.pdf" 
                     frameborder="0" 
                     width="100%" 
                     height="100%"
@@ -429,7 +429,7 @@
                 <input type="text" value="linkedin.com/in/ttsudarshan" readonly onclick="window.open('https://linkedin.com/in/ttsudarshan', '_blank')" style="cursor: pointer;">
 
                 <label>📄 Resume:</label>
-                <input type="text" value="Download Resume PDF" readonly onclick="window.open('https://github.com/ttsudarshan/Resume/raw/main/Sudarshan_Tiwaari_resume.pdf', '_blank')" style="cursor: pointer; background: #e0e0ff;">
+                <input type="text" value="Download Resume PDF" readonly onclick="window.open('/resume.pdf?download=1', '_blank')" style="cursor: pointer; background: #e0e0ff;">
 
                 <label>📍 Location:</label>
                 <input type="text" value="Springfield, Missouri" readonly>

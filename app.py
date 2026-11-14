@@ -1262,6 +1262,46 @@ class PortfolioShell:
 # API ROUTES
 # ============================================================================
 
+# ========== RESUME PDF PROXY ==========
+RESUME_PDF_URL = 'https://raw.githubusercontent.com/ttsudarshan/Resume/main/Sudarshan_Tiwaari_resume.pdf'
+RESUME_CACHE_SECONDS = 3600
+_resume_cache = {'data': None, 'fetched_at': 0}
+
+@app.route('/resume.pdf')
+def resume_pdf():
+    """Serve the resume PDF with a proper content type so browsers render it inline.
+
+    raw.githubusercontent.com sends application/octet-stream, which forces a download
+    and breaks iframe viewers, so fetch it server-side and re-serve it as application/pdf.
+    """
+    import time
+    from flask import Response
+
+    now = time.time()
+    data = _resume_cache['data']
+    if data is None or now - _resume_cache['fetched_at'] > RESUME_CACHE_SECONDS:
+        try:
+            resp = requests.get(RESUME_PDF_URL, timeout=15)
+            resp.raise_for_status()
+            data = resp.content
+            _resume_cache['data'] = data
+            _resume_cache['fetched_at'] = now
+        except requests.RequestException as e:
+            if data is None:
+                return jsonify({'error': f'Could not fetch resume: {e}'}), 502
+            # Fall back to the stale cached copy if GitHub is unreachable
+
+    disposition = 'attachment' if request.args.get('download') else 'inline'
+    return Response(
+        data,
+        mimetype='application/pdf',
+        headers={
+            'Content-Disposition': f'{disposition}; filename="Sudarshan_Tiwaari_resume.pdf"',
+            'Cache-Control': 'public, max-age=3600',
+        },
+    )
+
+
 @app.route('/')
 def index():
     """Serve main page"""
